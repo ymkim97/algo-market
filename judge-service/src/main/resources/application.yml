@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: judge-service
+
+server:
+  port: 8081
