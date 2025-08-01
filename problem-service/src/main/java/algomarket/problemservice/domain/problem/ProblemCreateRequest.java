@@ -1,13 +1,19 @@
 package algomarket.problemservice.domain.problem;
 
+import algomarket.problemservice.domain.shared.annotation.MemoryLimit;
+import algomarket.problemservice.domain.shared.annotation.TimeLimit;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
 public record ProblemCreateRequest(
-	String title,
+	@NotBlank @Size(max = 100) String title,
 
-	String description,
+	@NotBlank String description,
 
-	Double timeLimit,
+	@NotNull @Positive @TimeLimit Double timeLimit,
 
-	Integer memoryLimit
+	@NotNull @Positive @MemoryLimit Integer memoryLimit
 ) {
-
 }

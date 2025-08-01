@@ -1,0 +1,48 @@
+package algomarket.problemservice.application.provided;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import algomarket.problemservice.application.dto.ProblemInfoResponse;
+import algomarket.problemservice.domain.ProblemFixture;
+import algomarket.problemservice.domain.problem.DuplicateTitleException;
+import jakarta.persistence.EntityManager;
+
+@SpringBootTest
+@Transactional
+class ProblemCreatorTest {
+
+	@Autowired
+	ProblemCreator problemCreator;
+
+	@Autowired
+	EntityManager entityManager;
+
+	@Test
+	void create() {
+		var request = ProblemFixture.createProblemCreateRequest();
+
+		ProblemInfoResponse problemInfoResponse = problemCreator.create(request);
+		entityManager.flush();
+
+		assertThat(problemInfoResponse.id()).isNotNull();
+		assertThat(problemInfoResponse.submitCount()).isZero();
+	}
+
+	@Test
+	void createFailDuplicateTitle() {
+		var firstRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.5, 1024);
+		var secondRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.0, 512);
+		problemCreator.create(firstRequest);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		assertThatThrownBy(() -> problemCreator.create(secondRequest)).isInstanceOf(DuplicateTitleException.class);
+	}
+}
