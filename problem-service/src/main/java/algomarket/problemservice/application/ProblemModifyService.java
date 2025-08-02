@@ -1,6 +1,7 @@
 package algomarket.problemservice.application;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import algomarket.problemservice.application.dto.ProblemInfoResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
@@ -17,6 +18,7 @@ public class ProblemModifyService implements ProblemCreator {
 	private final ProblemRepository problemRepository;
 
 	@Override
+	@Transactional
 	public ProblemInfoResponse create(ProblemCreateRequest createRequest) {
 		checkDuplicateTitle(createRequest.title());
 
