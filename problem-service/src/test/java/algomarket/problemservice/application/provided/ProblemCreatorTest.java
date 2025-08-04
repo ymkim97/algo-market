@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import algomarket.problemservice.application.dto.ProblemInfoResponse;
-import algomarket.problemservice.domain.ProblemFixture;
+import algomarket.problemservice.domain.problem.ProblemFixture;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
 import jakarta.persistence.EntityManager;
 
@@ -35,7 +35,7 @@ class ProblemCreatorTest {
 	}
 
 	@Test
-	void createFailDuplicateTitle() {
+	void create_withDuplicateTitle_fail() {
 		var firstRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.5, 1024);
 		var secondRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.0, 512);
 		problemCreator.create(firstRequest);

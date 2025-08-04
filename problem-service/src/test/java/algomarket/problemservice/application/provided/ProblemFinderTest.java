@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import algomarket.problemservice.application.dto.ProblemInfoResponse;
-import algomarket.problemservice.domain.ProblemFixture;
+import algomarket.problemservice.domain.problem.ProblemFixture;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
@@ -38,7 +38,7 @@ class ProblemFinderTest {
 	}
 
 	@Test
-	void findFail() {
+	void find_fail() {
 		assertThatThrownBy(() -> problemFinder.find(999L)).isInstanceOf(IllegalArgumentException.class);
 	}
 }

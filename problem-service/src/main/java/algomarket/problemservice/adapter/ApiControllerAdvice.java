@@ -18,8 +18,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(RuntimeException.class)
 	public ProblemDetail handleRuntimeException(RuntimeException ex) {
 		log.error(ex.getMessage(), ex);
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error");
 
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error");
 		problemDetail.setProperty("timestamp", LocalDateTime.now());
 		problemDetail.setProperty("exception", ex.getClass().getSimpleName());
 
@@ -29,8 +29,8 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(DuplicateTitleException.class)
 	public ProblemDetail handleDuplicateTitle(DuplicateTitleException ex) {
 		log.error(ex.getMessage(), ex);
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "이미 존재하는 문제 제목입니다.");
 
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 존재하는 문제 제목입니다.");
 		problemDetail.setProperty("timestamp", LocalDateTime.now());
 		problemDetail.setProperty("exception", ex.getClass().getSimpleName());
 

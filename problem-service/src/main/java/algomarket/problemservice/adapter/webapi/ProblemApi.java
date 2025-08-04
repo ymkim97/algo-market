@@ -1,5 +1,8 @@
 package algomarket.problemservice.adapter.webapi;
 
+import java.net.URI;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,12 +30,18 @@ public class ProblemApi {
 	private final ProblemCreator problemCreator;
 
 	@GetMapping("/{problemId}")
-	public ProblemInfoResponse find(@PathVariable Long problemId) {
-		return problemFinder.find(problemId);
+	public ResponseEntity<ProblemInfoResponse> find(@PathVariable Long problemId) {
+		ProblemInfoResponse response = problemFinder.find(problemId);
+
+		return ResponseEntity.ok()
+			.body(response);
 	}
 
 	@PostMapping
-	public ProblemInfoResponse create(@Valid @RequestBody ProblemCreateRequest request) {
-		return problemCreator.create(request);
+	public ResponseEntity<ProblemInfoResponse> create(@Valid @RequestBody ProblemCreateRequest request) {
+		ProblemInfoResponse response = problemCreator.create(request);
+
+		return ResponseEntity.created(URI.create("/problems/" + response.id()))
+			.body(response);
 	}
 }
