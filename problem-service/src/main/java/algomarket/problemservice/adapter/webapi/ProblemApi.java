@@ -38,10 +38,10 @@ public class ProblemApi {
 	}
 
 	@PostMapping
-	public ResponseEntity<ProblemInfoResponse> create(@Valid @RequestBody ProblemCreateRequest request) {
+	public ResponseEntity<ProblemInfoResponse> create(@RequestBody @Valid ProblemCreateRequest request) {
 		ProblemInfoResponse response = problemCreator.create(request);
 
-		return ResponseEntity.created(URI.create("/problems/" + response.id()))
+		return ResponseEntity.created(URI.create("/problems/" + response.problemId()))
 			.body(response);
 	}
 }

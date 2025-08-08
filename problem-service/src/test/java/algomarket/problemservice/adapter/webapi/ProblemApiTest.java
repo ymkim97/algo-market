@@ -50,14 +50,14 @@ class ProblemApiTest {
 		assertThat(result)
 			.hasStatus(HttpStatus.CREATED)
 			.bodyJson()
-			.hasPathSatisfying("$.id", value -> assertThat(value).isNotNull())
+			.hasPathSatisfying("$.problemId", value -> assertThat(value).isNotNull())
 			.hasPathSatisfying("$.title", value -> assertThat(value).isEqualTo(request.title()));
 
 		ProblemInfoResponse response =
 			objectMapper.readValue(result.getResponse().getContentAsString(), ProblemInfoResponse.class);
-		Problem problem = problemRepository.findById(response.id()).orElseThrow();
+		Problem problem = problemRepository.findById(response.problemId()).orElseThrow();
 
-		assertThat(problem.getId()).isEqualTo(response.id());
+		assertThat(problem.getId()).isEqualTo(response.problemId());
 		assertThat(problem.getTitle()).isEqualTo(request.title());
 		assertThat(problem.getDescription()).isEqualTo(request.description());
 		assertThat(problem.getSubmitCount()).isZero();
@@ -79,7 +79,7 @@ class ProblemApiTest {
 	@Test
 	void find() {
 		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest());
-		Long problemId = problemInfoResponse.id();
+		Long problemId = problemInfoResponse.problemId();
 
 		var result = mockMvcTester.get().uri("/problems/{problemId}", problemId).contentType(MediaType.APPLICATION_JSON)
 			.exchange();
@@ -87,7 +87,7 @@ class ProblemApiTest {
 		assertThat(result)
 			.hasStatus(HttpStatus.OK)
 			.bodyJson()
-			.hasPathSatisfying("$.id", value -> assertThat(value).isEqualTo(problemInfoResponse.id().intValue()))
+			.hasPathSatisfying("$.problemId", value -> assertThat(value).isEqualTo(problemInfoResponse.problemId().intValue()))
 			.hasPathSatisfying("$.title", value -> assertThat(value).isEqualTo(problemInfoResponse.title()));
 	}
 }

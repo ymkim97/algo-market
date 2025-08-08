@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import algomarket.problemservice.domain.member.DuplicateEmailException;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,21 +20,35 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 	public ProblemDetail handleRuntimeException(RuntimeException ex) {
 		log.error(ex.getMessage(), ex);
 
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error");
-		problemDetail.setProperty("timestamp", LocalDateTime.now());
-		problemDetail.setProperty("exception", ex.getClass().getSimpleName());
+		return getProblemDetail(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+	}
 
-		return problemDetail;
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
+		log.error(ex.getMessage(), ex);
+
+		return getProblemDetail(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
 	}
 
 	@ExceptionHandler(DuplicateTitleException.class)
 	public ProblemDetail handleDuplicateTitle(DuplicateTitleException ex) {
 		log.error(ex.getMessage(), ex);
 
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "이미 존재하는 문제 제목입니다.");
+		return getProblemDetail(ex,  HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	@ExceptionHandler(DuplicateEmailException.class)
+	public ProblemDetail handleDuplicateEmail(DuplicateEmailException ex) {
+		log.error(ex.getMessage(), ex);
+
+		return getProblemDetail(ex, HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	private static ProblemDetail getProblemDetail(RuntimeException ex, HttpStatus status, String message) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, message);
 		problemDetail.setProperty("timestamp", LocalDateTime.now());
 		problemDetail.setProperty("exception", ex.getClass().getSimpleName());
-
-		return  problemDetail;
+		
+		return problemDetail;
 	}
 }

@@ -3,7 +3,7 @@ package algomarket.problemservice.application.dto;
 import algomarket.problemservice.domain.problem.Problem;
 
 public record ProblemInfoResponse(
-	Long id,
+	Long problemId,
 
 	String title,
 

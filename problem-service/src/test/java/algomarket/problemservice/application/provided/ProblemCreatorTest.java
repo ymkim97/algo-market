@@ -8,9 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import algomarket.problemservice.application.dto.ProblemInfoResponse;
-import algomarket.problemservice.domain.problem.ProblemFixture;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
+import algomarket.problemservice.domain.problem.ProblemFixture;
 import jakarta.persistence.EntityManager;
 
 @SpringBootTest
@@ -27,10 +26,10 @@ class ProblemCreatorTest {
 	void create() {
 		var request = ProblemFixture.createProblemCreateRequest();
 
-		ProblemInfoResponse problemInfoResponse = problemCreator.create(request);
+		var problemInfoResponse = problemCreator.create(request);
 		entityManager.flush();
 
-		assertThat(problemInfoResponse.id()).isNotNull();
+		assertThat(problemInfoResponse.problemId()).isNotNull();
 		assertThat(problemInfoResponse.submitCount()).isZero();
 	}
 

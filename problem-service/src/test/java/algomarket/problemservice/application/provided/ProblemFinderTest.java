@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import algomarket.problemservice.application.dto.ProblemInfoResponse;
 import algomarket.problemservice.domain.problem.ProblemFixture;
 import jakarta.persistence.EntityManager;
 
@@ -32,9 +31,9 @@ class ProblemFinderTest {
 		entityManager.flush();
 		entityManager.clear();
 
-		ProblemInfoResponse found = problemFinder.find(problemInfoResponse.id());
+		var foundResponse = problemFinder.find(problemInfoResponse.problemId());
 
-		assertThat(found.id()).isEqualTo(problemInfoResponse.id());
+		assertThat(foundResponse.problemId()).isEqualTo(problemInfoResponse.problemId());
 	}
 
 	@Test

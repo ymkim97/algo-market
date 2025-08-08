@@ -10,7 +10,7 @@ public interface ProblemRepository extends Repository<Problem, Long> {
 
 	Problem save(Problem problem);
 
-	Optional<Problem> findById(Long id);
+	Optional<Problem> findById(Long problemId);
 
 	boolean existsByTitle(String title);
 }
