@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import algomarket.problemservice.application.dto.ProblemInfoResponse;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.provided.ProblemFinder;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;

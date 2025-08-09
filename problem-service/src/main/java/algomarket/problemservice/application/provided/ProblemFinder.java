@@ -1,6 +1,6 @@
 package algomarket.problemservice.application.provided;
 
-import algomarket.problemservice.application.dto.ProblemInfoResponse;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 
 public interface ProblemFinder {
 

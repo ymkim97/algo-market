@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import algomarket.problemservice.application.dto.ProblemInfoResponse;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.domain.problem.Problem;

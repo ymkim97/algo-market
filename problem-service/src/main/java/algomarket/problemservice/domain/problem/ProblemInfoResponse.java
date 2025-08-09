@@ -1,6 +1,4 @@
-package algomarket.problemservice.application.dto;
-
-import algomarket.problemservice.domain.problem.Problem;
+package algomarket.problemservice.domain.problem;
 
 public record ProblemInfoResponse(
 	Long problemId,

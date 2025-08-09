@@ -3,7 +3,7 @@ package algomarket.problemservice.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import algomarket.problemservice.application.dto.ProblemInfoResponse;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
