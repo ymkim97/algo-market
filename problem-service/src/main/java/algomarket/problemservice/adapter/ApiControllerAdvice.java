@@ -21,7 +21,7 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 	public ProblemDetail handleRuntimeException(RuntimeException ex) {
 		log.error(ex.getMessage(), ex);
 
-		return getProblemDetail(ex, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+		return getProblemDetail(ex, HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
