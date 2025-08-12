@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import algomarket.problemservice.domain.member.DuplicateEmailException;
+import algomarket.problemservice.domain.member.DuplicateUsernameException;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +40,13 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(DuplicateEmailException.class)
 	public ProblemDetail handleDuplicateEmail(DuplicateEmailException ex) {
+		log.error(ex.getMessage(), ex);
+
+		return getProblemDetail(ex, HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	@ExceptionHandler(DuplicateUsernameException.class)
+	public ProblemDetail handleDuplicateUsername(DuplicateUsernameException ex) {
 		log.error(ex.getMessage(), ex);
 
 		return getProblemDetail(ex, HttpStatus.CONFLICT, ex.getMessage());
