@@ -11,21 +11,23 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemFixture;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 
 @SpringBootTest
 @Transactional
 @AutoConfigureMockMvc
+@WithMockUser
 class ProblemApiTest {
 
 	@Autowired
@@ -64,7 +66,7 @@ class ProblemApiTest {
 	}
 
 	@Test
-	void create_withDuplicateEmail_fail() throws JsonProcessingException {
+	void create_withDuplicateTitle_fail() throws JsonProcessingException {
 		var request =  ProblemFixture.createProblemCreateRequest();
 		problemCreator.create(request);
 
