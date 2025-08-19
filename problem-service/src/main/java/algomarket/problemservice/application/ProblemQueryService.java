@@ -25,7 +25,7 @@ public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
 	@Override
 	public ProblemInfoResponse find(Long problemId) {
 		Problem problem = problemRepository.findById(problemId)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 문제 번호입니다."));
+			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제 번호입니다."));
 
 		return ProblemInfoResponse.of(problem);
 	}

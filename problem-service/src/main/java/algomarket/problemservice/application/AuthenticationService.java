@@ -8,6 +8,7 @@ import algomarket.problemservice.application.required.MemberRepository;
 import algomarket.problemservice.application.required.TokenProvider;
 import algomarket.problemservice.domain.member.Member;
 import algomarket.problemservice.domain.member.PasswordEncoder;
+import algomarket.problemservice.domain.member.PasswordOrUsernameMismatchException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,7 +22,7 @@ public class AuthenticationService implements AuthenticationHandler {
 	@Override
 	public String login(LoginRequest loginRequest) {
 		Member member = memberRepository.findByUsername(loginRequest.username())
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+			.orElseThrow(() -> new PasswordOrUsernameMismatchException("잘못된 로그인 정보입니다."));
 
 		member.authenticate(loginRequest.password(), passwordEncoder);
 

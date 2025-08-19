@@ -37,7 +37,7 @@ public class JwtManager implements TokenProvider {
 	}
 
 	public String extractUsername(String token) throws JwtException {
-		Jws<Claims> claims = Jwts.parser().build().parseSignedClaims(token);
+		Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
 
 		return claims.getPayload().getSubject();
 	}

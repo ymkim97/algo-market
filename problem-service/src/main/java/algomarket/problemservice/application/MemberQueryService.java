@@ -17,7 +17,7 @@ public class MemberQueryService implements MemberFinder {
 	@Override
 	public MemberInfoResponse find(String username) {
 		Member member = memberRepository.findByUsername(username)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+			.orElseThrow(() -> new NotFoundException("존재하지 않는 회원입니다."));
 
 		return MemberInfoResponse.of(member);
 	}

@@ -53,7 +53,7 @@ public class Member {
 
 	public void authenticate(String password, PasswordEncoder passwordEncoder) {
 		if (!passwordEncoder.matches(password, passwordHash)) {
-			throw new PasswordMismatchException("비밀번호가 일치하지 않습니다.");
+			throw new PasswordOrUsernameMismatchException("잘못된 로그인 정보입니다.");
 		}
 	}
 

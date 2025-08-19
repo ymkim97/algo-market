@@ -8,6 +8,8 @@ public class MemoryLimitValidator implements ConstraintValidator<MemoryLimit, In
 
 	@Override
 	public boolean isValid(Integer value, ConstraintValidatorContext context) {
+		if (value == null) return true;
+
 		return value > 0 && value <= 5120;
 	}
 }

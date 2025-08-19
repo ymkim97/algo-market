@@ -25,6 +25,6 @@ public class MemberApi {
 	public ResponseEntity<MemberInfoResponse> register(@RequestBody @Valid MemberRegisterRequest registerRequest) {
 		MemberInfoResponse response = memberRegister.register(registerRequest);
 
-		return ResponseEntity.created(URI.create("/members" + response.memberId())).body(response);
+		return ResponseEntity.created(URI.create("/members/" + response.memberId())).body(response);
 	}
 }

@@ -40,4 +40,4 @@ out/
 */gradlew.bat
 */.gitattributes
 
-**/**application.yml
+**/**application**.yml

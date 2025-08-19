@@ -36,7 +36,7 @@ class MemberTest {
 	void authenticate() {
 		member.authenticate("password", passwordEncoder);
 		assertThatThrownBy(() -> member.authenticate("Wrong password", passwordEncoder))
-		    .isInstanceOf(PasswordMismatchException.class);
+		    .isInstanceOf(PasswordOrUsernameMismatchException.class);
 	}
 
 	@Test

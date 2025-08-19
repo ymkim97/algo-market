@@ -34,4 +34,17 @@ class MemberFinderTest {
 
 		assertThat(found).isNotNull();
 	}
+
+	@Test
+	void find_withNullEmail() {
+		var createRequest = MemberFixture.createMemberRegisterRequest(null);
+		var memberInfoResponse = memberRegister.register(createRequest);
+		entityManager.flush();
+		entityManager.clear();
+
+		var found = memberFinder.find(memberInfoResponse.username());
+
+		assertThat(found).isNotNull();
+		assertThat(found.email()).isNull();
+	}
 }

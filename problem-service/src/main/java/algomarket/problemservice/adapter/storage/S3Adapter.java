@@ -45,7 +45,7 @@ public class S3Adapter implements FileStorage {
 
 		PresignedPutObjectRequest presignedRequest = s3Presigner.presignPutObject(presignRequest);
 
-		log.info("Presigned URL to upload a file to: [{}]\n Key: [{}]", presignedRequest.url(), key);
+		log.debug("Generated S3 presign for key=[{}], expiresInMinutes=[{}]", key, s3Properties.presignedExpireMinutes());
 
 		return presignedRequest.url().toExternalForm();
 	}

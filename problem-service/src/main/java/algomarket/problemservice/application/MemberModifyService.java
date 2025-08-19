@@ -33,6 +33,8 @@ public class MemberModifyService implements MemberRegister {
 	}
 
 	private void checkEmailDuplicate(String email) {
+		if (email == null) return;
+
 		if (memberRepository.existsByEmail(new Email(email))) {
 			throw new DuplicateEmailException("이미 가입된 이메일입니다: " + email);
 		}

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import algomarket.problemservice.application.NotFoundException;
 import algomarket.problemservice.domain.problem.ProblemFixture;
 import jakarta.persistence.EntityManager;
 
@@ -38,6 +39,6 @@ class ProblemFinderTest {
 
 	@Test
 	void find_fail() {
-		assertThatThrownBy(() -> problemFinder.find(999L)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> problemFinder.find(999L)).isInstanceOf(NotFoundException.class);
 	}
 }
