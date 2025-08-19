@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import algomarket.problemservice.adapter.storage.UnsupportedFileExtensionException;
 import algomarket.problemservice.domain.member.DuplicateEmailException;
 import algomarket.problemservice.domain.member.DuplicateUsernameException;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
@@ -50,6 +51,13 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 		log.error(ex.getMessage(), ex);
 
 		return getProblemDetail(ex, HttpStatus.CONFLICT, ex.getMessage());
+	}
+
+	@ExceptionHandler(UnsupportedFileExtensionException.class)
+	public ProblemDetail handleUnsupportedFileExtension(UnsupportedFileExtensionException ex) {
+		log.error(ex.getMessage(), ex);
+
+		return getProblemDetail(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
 	}
 
 	private static ProblemDetail getProblemDetail(RuntimeException ex, HttpStatus status, String message) {

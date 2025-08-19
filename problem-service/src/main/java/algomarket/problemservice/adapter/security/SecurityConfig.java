@@ -12,7 +12,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -33,16 +35,19 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.POST, "/login").permitAll()
 			.requestMatchers(HttpMethod.POST, "/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/problems/**").permitAll()
+			.requestMatchers(HttpMethod.POST, "/problems/**").permitAll() // 임시
 			.anyRequest().authenticated())
 
 			.exceptionHandling(ex -> ex
 				.authenticationEntryPoint((request, response, authException) -> {
+					log.error("Authentication Failure", authException);
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 					response.setContentType("application/json;charset=UTF-8");
 					response.getWriter().write("{\"error\":\"Unauthorized\"}");
 				})
 
 			.accessDeniedHandler((request, response, accessDeniedException) -> {
+				log.error("Authentication Failure", accessDeniedException);
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				response.setContentType("application/json;charset=UTF-8");
 				response.getWriter().write("{\"error\":\"Not Found\"}");

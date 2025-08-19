@@ -10,16 +10,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import algomarket.problemservice.application.dto.InitiateUploadRequest;
+import algomarket.problemservice.application.dto.InitiateUploadResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
+import algomarket.problemservice.application.provided.ProblemFileManager;
 import algomarket.problemservice.application.provided.ProblemFinder;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;
 import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-/**
- * TODO: 테스트 데이터, 이미지 업로드: S3 presigned url, 이미지 다운로드: CDN(CloudFront)
- */
 
 @Controller
 @RequestMapping("/problems")
@@ -28,6 +27,7 @@ public class ProblemApi {
 
 	private final ProblemFinder problemFinder;
 	private final ProblemCreator problemCreator;
+	private final ProblemFileManager problemFileManager;
 
 	@GetMapping("/{problemId}")
 	public ResponseEntity<ProblemInfoResponse> find(@PathVariable Long problemId) {
@@ -42,6 +42,14 @@ public class ProblemApi {
 		ProblemInfoResponse response = problemCreator.create(request);
 
 		return ResponseEntity.created(URI.create("/problems/" + response.problemId()))
+			.body(response);
+	}
+
+	@PostMapping("/initiate-upload")
+	public ResponseEntity<InitiateUploadResponse> initiateUpload(@RequestBody @Valid InitiateUploadRequest request) {
+		InitiateUploadResponse response = problemFileManager.initiateUpload(request);
+
+		return ResponseEntity.created(URI.create("/problems/initiate-upload/" + request.problemId()))
 			.body(response);
 	}
 }

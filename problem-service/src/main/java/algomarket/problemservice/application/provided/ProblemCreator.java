@@ -1,7 +1,7 @@
 package algomarket.problemservice.application.provided;
 
-import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 
 public interface ProblemCreator {
 

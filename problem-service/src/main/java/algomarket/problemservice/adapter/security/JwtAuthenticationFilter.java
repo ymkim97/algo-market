@@ -30,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final List<IgnoreRule> ignoreRules = List.of(
 		new IgnoreRule("POST", "/login"),
 		new IgnoreRule("POST", "/members"),
+		new IgnoreRule("POST", "/problems/**"), // 임시
 		new IgnoreRule("GET", "/problems/**"),
 		new IgnoreRule("OPTIONS", "/**") // CORS preflight
 	);
