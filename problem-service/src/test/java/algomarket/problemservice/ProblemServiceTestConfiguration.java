@@ -1,25 +1,31 @@
 package algomarket.problemservice;
 
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
-import algomarket.problemservice.domain.member.PasswordEncoder;
+import algomarket.problemservice.adapter.storage.FileCategory;
+import algomarket.problemservice.application.required.FileStorage;
 
 @TestConfiguration
 public class ProblemServiceTestConfiguration {
 
 	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new PasswordEncoder() {
-
+	public FileStorage fileStorage() {
+		return new FileStorage() {
 			@Override
-			public String encode(String password) {
-				return "Hashed" + password.toUpperCase();
+			public String createKeyForProblemUpload(Long problemId, String fileName) {
+				String uuid = UUID.randomUUID().toString();
+				FileCategory category = FileCategory.findByFileName(fileName);
+
+				return category.createKey(problemId, uuid, fileName);
 			}
 
 			@Override
-			public boolean matches(String password, String passwordHash) {
-				return encode(password).equals(passwordHash);
+			public String createPresignedUrl(String key, Map<String, String> metadata) {
+				return "presignedUrl-created";
 			}
 		};
 	}
