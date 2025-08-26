@@ -33,6 +33,7 @@ dependencies {
 
     // AWS
     implementation("io.awspring.cloud:spring-cloud-aws-starter:3.4.0")
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.4.0")
     implementation("software.amazon.awssdk:s3:2.32.14")
 
     // JWT

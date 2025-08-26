@@ -35,7 +35,6 @@ public class SecurityConfig {
 			.requestMatchers(HttpMethod.POST, "/login").permitAll()
 			.requestMatchers(HttpMethod.POST, "/members").permitAll()
 			.requestMatchers(HttpMethod.GET, "/problems/**").permitAll()
-			.requestMatchers(HttpMethod.POST, "/problems/**").permitAll() // 임시
 			.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 			.anyRequest().authenticated())
 
