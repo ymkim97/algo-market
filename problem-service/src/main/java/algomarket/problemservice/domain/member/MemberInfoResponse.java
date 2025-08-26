@@ -7,8 +7,9 @@ public record MemberInfoResponse(
 
 	String username
 ) {
-	public static MemberInfoResponse of(Member member) {
-		return new MemberInfoResponse(member.getId(),
+	public static MemberInfoResponse from(Member member) {
+		return new MemberInfoResponse(
+			member.getId(),
 			member.getEmail() != null ?  member.getEmail().address() : null,
 			member.getUsername()
 		);

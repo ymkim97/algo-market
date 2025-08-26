@@ -3,10 +3,11 @@ package algomarket.problemservice.adapter.storage;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 public enum FileCategory {
 	IMAGE(Set.of("png", "jpg", "jpeg", "gif", "svg"), "problems/%d/images/%s-%s"),
-	TEST_DATA(Set.of("in", "out"), "problems/%d/test_data/%s-%s");
+	TEST_DATA(Set.of("in", "out"), "problems/%d/test_data/%s");
 
 	private final Set<String> extensions;
 	private final String pathFormat;
@@ -16,8 +17,14 @@ public enum FileCategory {
 		this.pathFormat =  pathFormat;
 	}
 
-	public String createKey(Long problemId, String uuid, String fileName) {
-		  return String.format(pathFormat, problemId, uuid, fileName);
+	public String createKey(Long problemId, String fileName) {
+		if (this == FileCategory.IMAGE) {
+			String uuid =  UUID.randomUUID().toString();
+
+			return String.format(pathFormat, problemId, uuid, fileName);
+		}
+
+		return  String.format(pathFormat, problemId, fileName);
 	}
 
 	public static FileCategory findByFileName(String nameOrExt) {

@@ -19,6 +19,6 @@ public class MemberQueryService implements MemberFinder {
 		Member member = memberRepository.findByUsername(username)
 			.orElseThrow(() -> new NotFoundException("존재하지 않는 회원입니다."));
 
-		return MemberInfoResponse.of(member);
+		return MemberInfoResponse.from(member);
 	}
 }

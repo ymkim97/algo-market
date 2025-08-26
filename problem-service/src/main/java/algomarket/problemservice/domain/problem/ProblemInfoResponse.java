@@ -13,8 +13,8 @@ public record ProblemInfoResponse(
 
 	Integer memoryLimit
 ) {
-	public static ProblemInfoResponse of(Problem problem) {
+	public static ProblemInfoResponse from(Problem problem) {
 		return new ProblemInfoResponse(problem.getId(), problem.getTitle(), problem.getDescription(), problem.getSubmitCount(),
-			problem.getTimeLimit(), problem.getMemoryLimit());
+			problem.getTimeLimitSec(), problem.getMemoryLimitMb());
 	}
 }

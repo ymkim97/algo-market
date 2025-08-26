@@ -24,7 +24,7 @@ public class ProblemModifyService implements ProblemCreator {
 
 		Problem problem = Problem.create(createRequest);
 
-		return ProblemInfoResponse.of(problemRepository.save(problem));
+		return ProblemInfoResponse.from(problemRepository.save(problem));
 	}
 
 	private void checkDuplicateTitle(String title) {

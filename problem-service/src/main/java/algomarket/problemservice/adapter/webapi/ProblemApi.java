@@ -3,6 +3,7 @@ package algomarket.problemservice.adapter.webapi;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +39,8 @@ public class ProblemApi {
 	}
 
 	@PostMapping
-	public ResponseEntity<ProblemInfoResponse> create(@RequestBody @Valid ProblemCreateRequest request) {
+	public ResponseEntity<ProblemInfoResponse> create(@RequestBody @Valid ProblemCreateRequest request, @AuthenticationPrincipal String username) {
+		// TODO: username 반영
 		ProblemInfoResponse response = problemCreator.create(request);
 
 		return ResponseEntity.created(URI.create("/problems/" + response.problemId()))
@@ -46,7 +48,8 @@ public class ProblemApi {
 	}
 
 	@PostMapping("/initiate-upload")
-	public ResponseEntity<InitiateUploadResponse> initiateUpload(@RequestBody @Valid InitiateUploadRequest request) {
+	public ResponseEntity<InitiateUploadResponse> initiateUpload(@RequestBody @Valid InitiateUploadRequest request, @AuthenticationPrincipal String username) {
+		// TODO: username 반영
 		InitiateUploadResponse response = problemFileManager.initiateUpload(request);
 
 		return ResponseEntity.created(URI.create("/problems/initiate-upload/" + request.problemId()))

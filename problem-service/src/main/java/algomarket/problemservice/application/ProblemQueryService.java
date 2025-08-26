@@ -27,7 +27,7 @@ public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
 		Problem problem = problemRepository.findById(problemId)
 			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제 번호입니다."));
 
-		return ProblemInfoResponse.of(problem);
+		return ProblemInfoResponse.from(problem);
 	}
 
 	@Override
@@ -47,8 +47,8 @@ public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
 	}
 
 	private void validateProblemId(Long problemId) {
-		if (problemRepository.findById(problemId).isEmpty()) {
-			throw new IllegalArgumentException("존재하지 않는 문제 번호입니다: " + problemId);
+		if (!problemRepository.existsById(problemId)) {
+			throw new NotFoundException("존재하지 않는 문제 번호입니다: " + problemId);
 		}
 	}
 }
