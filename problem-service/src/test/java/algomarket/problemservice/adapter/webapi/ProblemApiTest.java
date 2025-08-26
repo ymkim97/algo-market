@@ -9,16 +9,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import algomarket.problemservice.ProblemServiceTestConfiguration;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.domain.problem.Problem;
@@ -28,7 +27,6 @@ import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 @SpringBootTest
 @Transactional
 @AutoConfigureMockMvc
-@Import(ProblemServiceTestConfiguration.class)
 class ProblemApiTest {
 
 	@Autowired
@@ -44,6 +42,7 @@ class ProblemApiTest {
 	ObjectMapper objectMapper;
 
 	@Test
+	@WithMockUser
 	void create() throws JsonProcessingException, UnsupportedEncodingException {
 		var request = ProblemFixture.createProblemCreateRequest();
 
@@ -67,6 +66,7 @@ class ProblemApiTest {
 	}
 
 	@Test
+	@WithMockUser
 	void create_withDuplicateTitle_fail() throws JsonProcessingException {
 		var request = ProblemFixture.createProblemCreateRequest();
 		problemCreator.create(request);
@@ -95,6 +95,7 @@ class ProblemApiTest {
 	}
 
 	@Test
+	@WithMockUser
 	void initiateUpload() throws JsonProcessingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
@@ -111,11 +112,11 @@ class ProblemApiTest {
 			.hasStatus(HttpStatus.CREATED)
 			.bodyJson()
 			.hasPathSatisfying("$.key", value -> assertThat(value).isNotNull())
-			.hasPathSatisfying("$.presignedUrl", value -> assertThat(value).isNotNull())
-			.hasPathSatisfying("$.presignedUrl", value -> assertThat(value).isEqualTo("presignedUrl-created"));
+			.hasPathSatisfying("$.presignedUrl", value -> assertThat(value).isNotNull());
 	}
 
 	@Test
+	@WithMockUser
 	void initiateUpload_withInvalidFile_fail() throws JsonProcessingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
