@@ -8,38 +8,31 @@ import org.springframework.context.annotation.Configuration;
 
 import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
 public class SqsConfig {
 
-	@Value("${spring.cloud.aws.credentials.access-key}")
-	private String accessKey;
-
-	@Value("${spring.cloud.aws.credentials.secret-key}")
-	private String secretKey;
-
 	@Value("${spring.cloud.aws.region.static}")
 	private String region;
 
 	@Bean
-	public SqsAsyncClient sqsAsyncClient() {
+	public SqsAsyncClient sqsAsyncClient(AwsCredentialsProvider awsCredentialsProvider) {
 		return SqsAsyncClient.builder()
-			.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+			.credentialsProvider(awsCredentialsProvider)
 			.region(Region.of(region))
 			.build();
 	}
 
 	@Bean
-	public SqsTemplate sqsTemplate() {
-		return SqsTemplate.newTemplate(sqsAsyncClient());
+	public SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient) {
+		return SqsTemplate.newTemplate(sqsAsyncClient);
 	}
 
 	@Bean
-	public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory() {
+	public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(SqsAsyncClient sqsAsyncClient) {
 		return SqsMessageListenerContainerFactory.builder()
 			.configure(sqsContainerOptionsBuilder ->
 				sqsContainerOptionsBuilder
@@ -49,7 +42,7 @@ public class SqsConfig {
 					.acknowledgementInterval(Duration.ofSeconds(1))
 					.acknowledgementThreshold(1)
 			)
-			.sqsAsyncClient(sqsAsyncClient())
+			.sqsAsyncClient(sqsAsyncClient)
 			.build();
 	}
 }

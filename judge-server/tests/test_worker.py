@@ -86,27 +86,31 @@ class TestWorker:
         """필수 필드 누락 시 처리 테스트"""
         message_body = {
             "submissionId": 12345,
-            # problemId 누락
+            # problemId
             "username": "testuser",
             "sourceCode": "print('test')",
-            "language": "PYTHON"
-            # timeLimit, memoryLimit 누락
+            "language": "PYTHON",
+            "timeLimit": 2,
+            "memoryLimit": 512
         }
-        
-        with patch('judge.worker.save_to_temp') as mock_save, \
-             patch('judge.worker.run') as mock_run, \
-             patch('judge.worker.delete_temp') as mock_delete, \
-             patch('judge.worker._send_message') as mock_send:
-            
-            mock_save.return_value = "/tmp/test/Main.py"
-            mock_run.return_value = "ACCEPTED"
-            
+
+        with pytest.raises(ValueError, match="Missing required fields in message"):
             judge.worker._handle_message(message_body)
-            
-            # None 값들이 전달되어야 함
-            mock_run.assert_called_once_with(
-                "/tmp/test/Main.py", "PYTHON", None, None, None
-            )
+    
+    def test_handle_message_invalid_types(self):
+        """필드 타입이 잘못된 경우 처리 테스트"""
+        message_body = {
+            "submissionId": 12345,
+            "problemId": 1,
+            "username": "testuser",
+            "sourceCode": "print('test')",
+            "language": "PYTHON",
+            "timeLimit": "invalid",
+            "memoryLimit": 256
+        }
+
+        with pytest.raises(ValueError):
+            judge.worker._handle_message(message_body)
 
 
 class TestSendMessage:

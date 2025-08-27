@@ -22,7 +22,7 @@ DOCKER_BASE_CMD = [
     "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m"
 ]
 
-ERROR_PATTERNS = {
+MEMORY_ERROR_PATTERNS = {
     "JAVA": ["OutOfMemoryError"],
     "PYTHON": ["MemoryError"]
 }
@@ -46,7 +46,7 @@ def _build_docker_command(language, memory_limit, path) -> list[str]:
 
     docker_cmd = DOCKER_BASE_CMD.copy()
     docker_cmd.extend([
-        "--memory", f"{memory_limit * 2}m",
+        "--memory", f"{memory_limit}m",
         "-v", f"{work_dir}:/app:ro",
         "-w", "/app",
         "-i",
@@ -81,8 +81,8 @@ def _evaluate_code(path: str, language: str, time_limit: int, memory_limit: int,
             stdout, stderr = process.communicate(input=input_data, timeout=time_limit)
 
             if process.returncode != 0:
-                logger.error(f"Runtime Error: {stderr}")
-                if any(error in stderr for error in ERROR_PATTERNS[language]):
+                logger.error(f"Error With Judge: {stderr}")
+                if any(error in stderr for error in MEMORY_ERROR_PATTERNS[language]) or process.returncode == 137:
                     return "MEMORY_LIMIT_EXCEEDED"
                 return "RUNTIME_ERROR"
 

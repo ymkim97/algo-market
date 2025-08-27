@@ -2,6 +2,7 @@ package algomarket.problemservice.adapter.storage;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,13 +19,18 @@ public enum FileCategory {
 	}
 
 	public String createKey(Long problemId, String fileName) {
+		Objects.requireNonNull(problemId);
+		Objects.requireNonNull(fileName);
+
+		String safeName = fileName.replaceAll("[^a-zA-Z0-9.-]", "_").trim();
+
 		if (this == FileCategory.IMAGE) {
 			String uuid =  UUID.randomUUID().toString();
 
-			return String.format(pathFormat, problemId, uuid, fileName);
+			return String.format(pathFormat, problemId, uuid, safeName);
 		}
 
-		return  String.format(pathFormat, problemId, fileName);
+		return  String.format(pathFormat, problemId, safeName);
 	}
 
 	public static FileCategory findByFileName(String nameOrExt) {

@@ -34,6 +34,11 @@ public class SqsSubmissionEventProducer implements SubmissionEventHandler {
 			throw new RuntimeException("Serialization failure", e);
 		}
 
-		sqsTemplate.send(queueName, message);
+		sqsTemplate.send(to -> to
+			.queue(queueName)
+			.payload(message)
+			.messageGroupId("submits")
+			.messageDeduplicationId(submittedEvent.submissionId().toString())
+		);
 	}
 }

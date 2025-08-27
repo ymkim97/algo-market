@@ -29,7 +29,7 @@ public class SubmissionService implements SubmissionHandler {
 		Problem problem = problemRepository.findById(submitRequest.problemId())
 			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제입니다: " + submitRequest.problemId()));
 
-		Submission submission = Submission.submit(submitRequest, "username");
+		Submission submission = Submission.submit(submitRequest, username);
 		submission = submissionRepository.save(submission);
 
 		SubmittedEvent submittedEvent = SubmittedEvent.of(submitRequest, username, submission.getId(), problem.getTimeLimitSec(), problem.getMemoryLimitMb());

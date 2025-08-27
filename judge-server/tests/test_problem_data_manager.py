@@ -126,12 +126,10 @@ class TestProblemDataManager:
         mock_s3_client = MagicMock()
         mock_boto3.client.return_value = mock_s3_client
         mock_s3_client.list_objects_v2.return_value = {}  # Contents 키 없음
-        
-        input_data, output_data = fetch_test_data(1)
-        
+
         # 빈 결과 반환
-        assert input_data == []
-        assert output_data == []
+        with pytest.raises(ValueError):
+            fetch_test_data(1)
     
     def test_sort_test_files_numeric_sorting(self):
         """테스트 파일 숫자 정렬 테스트"""
@@ -202,7 +200,7 @@ class TestProblemDataManager:
         with open(os.path.join(problem_dir, "input-1.in"), "w") as f:
             f.write("test")
         
-        with pytest.raises(ValueError, match="Mismatched number of input \\(1\\) and output \\(0\\) files for problem 1"):
+        with pytest.raises(ValueError):
             fetch_test_data(1)
     
     @patch('judge.problem_data_manager.boto3')

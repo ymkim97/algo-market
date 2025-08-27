@@ -68,6 +68,9 @@ public class Submission {
 		if (submitStatus == SubmitStatus.ACCEPTED) {
 			this.runtimeMs = runtimeMs;
 			this.memoryKb = memoryKb;
+		} else {
+			this.runtimeMs = null;
+			this.memoryKb = null;
 		}
 	}
 }

@@ -4,9 +4,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    aws_region: str = os.getenv("AWS_REGION", "ap-northeast-2")
-    aws_access_key_id: str | None = os.getenv("AWS_ACCESS_KEY")
-    aws_secret_access_key: str | None = os.getenv("AWS_SECRET_KEY")
+    aws_region: str = os.getenv("AWS_REGION")
+    aws_access_key_id: str | None = os.getenv("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key: str | None = os.getenv("AWS_SECRET_ACCESS_KEY")
 
     sqs_submission_queue_name: str | None = os.getenv("CONSUME_QUEUE_NAME")
     sqs_result_queue_name: str | None = os.getenv("PRODUCE_QUEUE_NAME")

@@ -52,9 +52,12 @@ def _handle_message(message_body: dict):
         message_body.get("username"),
         message_body.get("sourceCode"),
         message_body.get("language"),
-        message_body.get("timeLimit"),
-        message_body.get("memoryLimit"),
+        int(message_body.get("timeLimit")),
+        int(message_body.get("memoryLimit")),
     )
+
+    if not all([submission_id, problem_id, username, source_code, language, time_limit, memory_limit]):
+        raise ValueError(f"Missing required fields in message: {message_body}")
 
     logger.info(f"Start judging problem={problem_id}, lang={language}")
 
