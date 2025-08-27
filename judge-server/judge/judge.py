@@ -19,7 +19,10 @@ DOCKER_BASE_CMD = [
     "--pids-limit=64",
     "--cpus", "1.0",
     "--read-only",
-    "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m"
+    "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m",
+    "--cap-drop", "ALL",
+    "--security-opt", "no-new-privileges",
+    "--user", "65334:65334"
 ]
 
 MEMORY_ERROR_PATTERNS = {

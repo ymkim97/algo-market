@@ -15,10 +15,14 @@ def compile_java(source_code_path) -> int:
         "--cpus", "0.5", 
         "--network", "none",
         "--read-only",
+        "--cap-drop", "ALL",
+        "--security-opt", "no-new-privileges",
+        "--user", f"{os.getuid()}:{os.getgid()}",
+        "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m",
         "-v", f"{work_dir}:/app:rw",
         "-w", "/app",
         "amazoncorretto:21",
-        "javac", "-cp", ".", java_filename
+        "javac", "-encoding", "UTF-8", "-cp", ".", java_filename
     ]
     
     logger.info(f"Compiling Java file: {java_filename}")
