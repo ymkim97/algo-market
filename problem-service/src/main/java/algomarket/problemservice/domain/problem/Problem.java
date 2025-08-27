@@ -13,11 +13,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Problem {
 
 	@Id
@@ -37,21 +37,19 @@ public class Problem {
 	@Column(nullable = false)
 	private ProblemStatus problemStatus;
 
-	// Second
 	@Column(nullable = false)
-	private Double timeLimit;
+	private Double timeLimitSec;
 
-	// MB
 	@Column(nullable = false)
-	private Integer memoryLimit;
+	private Integer memoryLimitMb;
 
 	public static Problem create(ProblemCreateRequest createRequest) {
 		Problem problem = new Problem();
 
 		problem.title = Objects.requireNonNull(createRequest.title());
 		problem.description = Objects.requireNonNull(createRequest.description());
-		problem.timeLimit = validateTimeLimit(createRequest.timeLimit());
-		problem.memoryLimit = validateMemoryLimit(createRequest.memoryLimit());
+		problem.timeLimitSec = validateTimeLimit(createRequest.timeLimitSec());
+		problem.memoryLimitMb = validateMemoryLimit(createRequest.memoryLimitMb());
 
 		problem.submitCount = 0;
 		problem.problemStatus = ProblemStatus.INSPECTING;

@@ -29,7 +29,7 @@ public class MemberModifyService implements MemberRegister {
 
 		Member member = Member.register(request, passwordEncoder);
 
-		return MemberInfoResponse.of(memberRepository.save(member));
+		return MemberInfoResponse.from(memberRepository.save(member));
 	}
 
 	private void checkEmailDuplicate(String email) {

@@ -12,8 +12,8 @@ public record ProblemCreateRequest(
 
 	@NotBlank String description,
 
-	@NotNull @Positive @TimeLimit Double timeLimit,
+	@NotNull @Positive @TimeLimit Double timeLimitSec,
 
-	@NotNull @Positive @MemoryLimit Integer memoryLimit
+	@NotNull @Positive @MemoryLimit Integer memoryLimitMb
 ) {
 }

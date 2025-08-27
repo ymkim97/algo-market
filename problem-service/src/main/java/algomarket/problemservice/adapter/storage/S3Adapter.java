@@ -2,7 +2,6 @@ package algomarket.problemservice.adapter.storage;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
@@ -24,10 +23,9 @@ public class S3Adapter implements FileStorage {
 
 	@Override
 	public String createKeyForProblemUpload(Long problemId, String fileName) {
-		String uuid = UUID.randomUUID().toString();
 		FileCategory category = FileCategory.findByFileName(fileName);
 
-		return category.createKey(problemId, uuid, fileName);
+		return category.createKey(problemId, fileName);
 	}
 
 	@Override

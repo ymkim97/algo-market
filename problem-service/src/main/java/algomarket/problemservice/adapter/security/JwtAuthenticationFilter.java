@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -30,7 +31,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final List<IgnoreRule> ignoreRules = List.of(
 		new IgnoreRule("POST", "/login"),
 		new IgnoreRule("POST", "/members"),
-		new IgnoreRule("POST", "/problems/**"), // 임시
 		new IgnoreRule("GET", "/problems/**"),
 		new IgnoreRule("OPTIONS", "/**") // CORS preflight
 	);
@@ -55,7 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				jwtManager.authenticate(token);
 				String username = jwtManager.extractUsername(token);
 
-				Authentication authentication = new UsernamePasswordAuthenticationToken(username, null);
+				Authentication authentication =
+					new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority("USER")));
 
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			} catch (JwtException e) {

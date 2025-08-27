@@ -13,4 +13,6 @@ public interface ProblemRepository extends Repository<Problem, Long> {
 	Optional<Problem> findById(Long problemId);
 
 	boolean existsByTitle(String title);
+
+	boolean existsById(Long problemId);
 }
