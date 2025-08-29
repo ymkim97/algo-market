@@ -16,7 +16,7 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MemoryLimit {
 
-	String message() default "메모리 제한은 0MB 초과, 5120MB 이하로 설정 가능합니다.";
+	String message() default "메모리 제한은 128MB 이상, 512 이하로 설정 가능합니다.";
 
 	Class<?>[] groups() default {};
 

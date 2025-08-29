@@ -16,7 +16,7 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TimeLimit {
 
-	String message() default "시간 제한은 0초 초과, 100초 이하로 설정 가능합니다.";
+	String message() default "시간 제한은 0초 초과, 10초 이하로 설정 가능합니다.";
 
 	Class<?>[] groups() default {};
 

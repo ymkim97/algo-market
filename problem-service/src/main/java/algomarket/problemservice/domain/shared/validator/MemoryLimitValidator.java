@@ -10,6 +10,6 @@ public class MemoryLimitValidator implements ConstraintValidator<MemoryLimit, In
 	public boolean isValid(Integer value, ConstraintValidatorContext context) {
 		if (value == null) return true;
 
-		return value > 0 && value <= 5120;
+		return value >= 128 && value <= 512;
 	}
 }

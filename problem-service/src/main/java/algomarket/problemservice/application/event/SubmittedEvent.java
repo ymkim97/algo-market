@@ -9,8 +9,8 @@ public record SubmittedEvent(
 	String username,
 	String sourceCode,
 	Language language,
-	Double timeLimit,
-	Integer memoryLimit
+	Double timeLimitSec,
+	Integer memoryLimitMb
 ) {
 	public static SubmittedEvent of(SubmitRequest submitRequest, String username, Long submissionId, Double timeLimit, Integer memoryLimit) {
 		return new SubmittedEvent(
