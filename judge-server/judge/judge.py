@@ -48,6 +48,7 @@ def _evaluate_code(path: str, language: str, time_limit_sec: int, memory_limit_m
     docker_cmd = _build_docker_command(language, memory_limit_mb, path)
 
     max_test_duration_ms = 0.0
+    max_memory_used_kb = 0
 
     for i, (input_data, expected_data) in enumerate(zip(input_test_data, output_test_data)):
         process = None
@@ -71,8 +72,9 @@ def _evaluate_code(path: str, language: str, time_limit_sec: int, memory_limit_m
                     return "SERVER_ERROR", None, None
                 return "RUNTIME_ERROR", None, None
 
-            execution_time_ms = _parse_execution_time_to_ms(stderr)
+            execution_time_ms, memory_used_kb = _parse_execution_time_ms_and_memory_usage_kb(stderr)
             max_test_duration_ms = max(max_test_duration_ms, execution_time_ms)
+            max_memory_used_kb = max(max_memory_used_kb, memory_used_kb)
 
             if max_test_duration_ms > time_limit_sec * 1000:
                 return "TIME_LIMIT_EXCEEDED", None, None
@@ -88,9 +90,9 @@ def _evaluate_code(path: str, language: str, time_limit_sec: int, memory_limit_m
         finally:
             _cleanup_process(process)
 
-    logger.info(f"All test cases passed. Maximum execution time: {max_test_duration_ms}MS")
+    logger.info(f"All test cases passed. Maximum execution time: {max_test_duration_ms}MS, Maximum memory used: {max_memory_used_kb}KB")
 
-    return "ACCEPTED", max_test_duration_ms, None
+    return "ACCEPTED", max_test_duration_ms, max_memory_used_kb
 
 def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
     if language not in DOCKER_IMAGES:
@@ -107,7 +109,7 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
             "-i",
             DOCKER_IMAGES[language]
         ])
-        docker_cmd.extend(["bash", "-c", f"time java -Xmx{memory_limit_mb}m -Dfile.encoding=UTF-8 -cp . Main"])
+        docker_cmd.extend(["bash", "-c", f"time java -Xmx{memory_limit_mb}m -Dfile.encoding=UTF-8 -cp . Main; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2; exit $exit_code"])
     elif language == "PYTHON":
         docker_cmd.extend([
             "--memory", f"{memory_limit_mb + 4}m",
@@ -117,14 +119,15 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
             DOCKER_IMAGES[language]
         ])
         script_name = os.path.basename(path)
-        docker_cmd.extend(["bash", "-c", f"time python -I -B -S {script_name}"])
+        docker_cmd.extend(["bash", "-c", f"time python -I -B -S {script_name}; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2 ; exit $exit_code"])
 
     return docker_cmd
 
-def _parse_execution_time_to_ms(stderr: str) -> int:
+def _parse_execution_time_ms_and_memory_usage_kb(stderr: str) -> tuple[int, int]:
     lines = stderr.strip().split('\n')
 
     total_ms = 0
+    memory_used_kb = 0
 
     for line in lines:
         if line.startswith('user') or line.startswith('sys'):
@@ -135,8 +138,10 @@ def _parse_execution_time_to_ms(stderr: str) -> int:
             seconds = float(parts[1])
 
             total_ms += int((minutes * 60 + seconds) * 1000)
+        elif line.startswith('MEMORY_KB:'):
+            memory_used_kb = int(line.split(':')[1])
 
-    return total_ms
+    return total_ms, memory_used_kb
 
 def _cleanup_process(process):
     if process and process.poll() is None:
