@@ -1,4 +1,4 @@
-from judge.compiler import compile_java
+from judge.compiler import compile_java, compile_python
 from judge.problem_data_manager import fetch_test_data
 
 import os
@@ -37,8 +37,12 @@ def run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id)
             return "COMPILE_ERROR", None, None
 
     elif language == "PYTHON":
+        compile_result_code = compile_python(source_code_path)
         time_limit_sec = time_limit_sec * 3 + 2
         memory_limit_mb = memory_limit_mb * 2 + 16
+
+        if compile_result_code != 0:
+            return "COMPILE_ERROR", None, None
 
     result, max_duration, max_memory = _evaluate_code(source_code_path, language, time_limit_sec, memory_limit_mb, input_test_data, output_test_data)
 
@@ -118,8 +122,7 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
             "-i",
             DOCKER_IMAGES[language]
         ])
-        script_name = os.path.basename(path)
-        docker_cmd.extend(["bash", "-c", f"time python -I -B -S {script_name}; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2 ; exit $exit_code"])
+        docker_cmd.extend(["bash", "-c", f"time python -I -S -W ignore Main.py; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2 ; exit $exit_code"])
 
     return docker_cmd
 
