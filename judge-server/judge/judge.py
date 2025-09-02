@@ -1,5 +1,6 @@
 from judge.compiler import compile_java, compile_python
 from judge.problem_data_manager import fetch_test_data
+from judge.progress_publisher import progress_publisher
 
 import os
 import logging
@@ -25,7 +26,7 @@ DOCKER_BASE_CMD = [
     "--user", "65334:65334"
 ]
 
-def run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id) -> tuple[str, float | None, int | None]:
+def run(source_code_path: str, language: str, time_limit_sec: int, memory_limit_mb: int, problem_id: int, submission_id: int, username: str) -> tuple[str, float | None, int | None]:
     input_test_data, output_test_data = fetch_test_data(problem_id)
 
     if language == "JAVA":
@@ -34,6 +35,7 @@ def run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id)
         memory_limit_mb = memory_limit_mb * 2 + 16
 
         if compile_result_code != 0:
+            progress_publisher.publish_judging_completed(submission_id, username, "COMPILE_ERROR")
             return "COMPILE_ERROR", None, None
 
     elif language == "PYTHON":
@@ -42,13 +44,18 @@ def run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id)
         memory_limit_mb = memory_limit_mb * 2 + 16
 
         if compile_result_code != 0:
+            progress_publisher.publish_judging_completed(submission_id, username, "COMPILE_ERROR")
             return "COMPILE_ERROR", None, None
 
-    result, max_duration, max_memory = _evaluate_code(source_code_path, language, time_limit_sec, memory_limit_mb, input_test_data, output_test_data)
+    progress_publisher.publish_judging_start(submission_id, username, len(input_test_data))
+
+    result, max_duration, max_memory = _evaluate_code(username, source_code_path, language, time_limit_sec, memory_limit_mb, input_test_data, output_test_data, submission_id)
+
+    progress_publisher.publish_judging_completed(submission_id, username, result)
 
     return result, max_duration, max_memory
 
-def _evaluate_code(path: str, language: str, time_limit_sec: int, memory_limit_mb: int, input_test_data: list, output_test_data: list) -> tuple[str, float | None, int | None]:
+def _evaluate_code(username: str, path: str, language: str, time_limit_sec: int, memory_limit_mb: int, input_test_data: list, output_test_data: list, submission_id: int) -> tuple[str, float | None, int | None]:
     docker_cmd = _build_docker_command(language, memory_limit_mb, path)
 
     max_test_duration_ms = 0.0
@@ -85,6 +92,8 @@ def _evaluate_code(path: str, language: str, time_limit_sec: int, memory_limit_m
 
             if stdout.strip() != expected_data.strip():
                 return "WRONG_ANSWER", None, None
+
+            progress_publisher.publish_test_case_completed(submission_id, username, i + 1, len(input_test_data))
 
         except subprocess.TimeoutExpired:
             if process:

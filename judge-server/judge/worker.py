@@ -47,8 +47,8 @@ def consume_loop():
 
 def _handle_message(message_body: dict):
     submission_id, problem_id, username, source_code, language, time_limit_sec, memory_limit_mb = (
-        message_body.get("submissionId"),
-        message_body.get("problemId"),
+        int(message_body.get("submissionId")),
+        int(message_body.get("problemId")),
         message_body.get("username"),
         message_body.get("sourceCode"),
         message_body.get("language"),
@@ -64,7 +64,7 @@ def _handle_message(message_body: dict):
     source_code_path = save_to_temp(source_code, submission_id, username, language)
     logger.info(f"SAVED PATH: {source_code_path}")
 
-    judge_result = run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id)
+    judge_result = run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id, submission_id, username)
 
     delete_temp(submission_id, username)
 
