@@ -37,7 +37,7 @@ public class SqsSubmissionEventProducer implements SubmissionEventHandler {
 		sqsTemplate.send(to -> to
 			.queue(queueName)
 			.payload(message)
-			.messageGroupId("submits")
+			.messageGroupId("submits:" + submittedEvent.submissionId())
 			.messageDeduplicationId(submittedEvent.submissionId().toString())
 		);
 	}
