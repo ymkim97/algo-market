@@ -8,5 +8,9 @@ public enum SubmitStatus {
 	RUNTIME_ERROR,
 	SERVER_ERROR,
 	MEMORY_LIMIT_EXCEEDED,
-	TIME_LIMIT_EXCEEDED,
+	TIME_LIMIT_EXCEEDED;
+	
+	public boolean isCompleted() {
+		return this != JUDGING;
+	}
 }
