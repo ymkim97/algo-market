@@ -29,13 +29,20 @@ public class ProgressService implements ProgressStreamer {
 		SseEmitter emitter = progressNotifier.saveSubscription(username, submissionId);
 
 		log.info("Starting subscription for submission: {}", submissionId);
-		progressSubscriber.subscribeToProgress(submissionId);
+
+		try {
+			progressSubscriber.subscribeToProgress(submissionId);
+		} catch (RuntimeException e) {
+			log.error("Failed to subscribe to submission: {}", submissionId, e);
+			progressNotifier.completeProgress(username, submissionId, SubmitStatus.SERVER_ERROR);
+			throw e;
+		}
 
 		return emitter;
 	}
 
 	@EventListener
-	private void handleProgressEvent(ProgressEvent event) {
+	protected void handleProgressEvent(ProgressEvent event) {
 		log.info("Processing progress event for submission {} (user: {}): {}", event.submissionId(), event.username(), event.submitStatus());
 		
 		progressNotifier.notifyProgressUpdate(event.username(), event.submissionId(), event);
