@@ -8,12 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.required.ProgressNotifier;
 import algomarket.problemservice.application.required.ProgressSubscriber;
-import algomarket.problemservice.application.required.SubmissionEventHandler;
 import algomarket.problemservice.domain.problem.ProblemFixture;
 import algomarket.problemservice.domain.submission.Language;
 import algomarket.problemservice.domain.submission.SubmitRequest;
@@ -33,7 +30,6 @@ import algomarket.problemservice.domain.submission.SubmitStatus;
 @SpringBootTest
 @Transactional
 @AutoConfigureMockMvc
-@Import(SubmissionApiTest.TestConfig.class)
 class SubmissionApiTest {
 
 	@Autowired
@@ -47,6 +43,9 @@ class SubmissionApiTest {
 
 	@Autowired
 	MockMvcTester mockMvcTester;
+
+	@MockitoBean
+	ProgressSubscriber progressSubscriber;
 
 	@Test
 	@WithMockUser
@@ -115,27 +114,5 @@ class SubmissionApiTest {
 		assertThat(emitters).hasSize(1);
 
 		emitters.clear();
-	}
-
-	@TestConfiguration
-	static class TestConfig {
-
-		@Bean
-		public SubmissionEventHandler submissionEventHandler() {
-			return submittedEvent -> {};
-		}
-
-		@Bean
-		public ProgressSubscriber progressSubscriber() {
-			return new ProgressSubscriber() {
-				@Override
-				public void subscribeToProgress(Long submissionId) {
-				}
-
-				@Override
-				public void unsubscribeFromProgress(Long submissionId) {
-				}
-			};
-		}
 	}
 }

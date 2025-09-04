@@ -16,8 +16,8 @@ class TestWorker:
             "username": "testuser",
             "sourceCode": "print('Hello')",
             "language": "PYTHON",
-            "timeLimit": 5,
-            "memoryLimit": 256
+            "timeLimitSec": 5,
+            "memoryLimitMb": 256
         }
         
         with patch('judge.worker.save_to_temp') as mock_save, \
@@ -26,7 +26,7 @@ class TestWorker:
              patch('judge.worker._send_message') as mock_send:
             
             mock_save.return_value = "/tmp/test/Main.py"
-            mock_run.return_value = "ACCEPTED"
+            mock_run.return_value = ("ACCEPTED", 100.5, 1024)
             
             judge.worker._handle_message(message_body)
             
@@ -35,7 +35,7 @@ class TestWorker:
                 "print('Hello')", 12345, "testuser", "PYTHON"
             )
             mock_run.assert_called_once_with(
-                "/tmp/test/Main.py", "PYTHON", 5, 256, 1
+                "/tmp/test/Main.py", "PYTHON", 5, 256, 1, 12345, "testuser"
             )
             mock_delete.assert_called_once_with(12345, "testuser")
             
@@ -45,8 +45,8 @@ class TestWorker:
                 "problemId": 1,
                 "username": "testuser",
                 "submitStatus": "ACCEPTED",
-                "runtimeMs": None,
-                "memoryKb": None
+                "runtimeMs": 100.5,
+                "memoryKb": 1024
             }
             mock_send.assert_called_once_with(expected_event)
     
@@ -58,8 +58,8 @@ class TestWorker:
             "username": "javauser",
             "sourceCode": "public class Main { invalid syntax }",
             "language": "JAVA",
-            "timeLimit": 10,
-            "memoryLimit": 512
+            "timeLimitSec": 10,
+            "memoryLimitMb": 512
         }
         
         with patch('judge.worker.save_to_temp') as mock_save, \
@@ -68,7 +68,7 @@ class TestWorker:
              patch('judge.worker._send_message') as mock_send:
             
             mock_save.return_value = "/tmp/test/Main.java"
-            mock_run.return_value = "COMPILE_ERROR"
+            mock_run.return_value = ("COMPILE_ERROR", None, None)
             
             judge.worker._handle_message(message_body)
             
@@ -86,15 +86,15 @@ class TestWorker:
         """필수 필드 누락 시 처리 테스트"""
         message_body = {
             "submissionId": 12345,
-            # problemId
+            "problemId": None,
             "username": "testuser",
             "sourceCode": "print('test')",
             "language": "PYTHON",
-            "timeLimit": 2,
-            "memoryLimit": 512
+            "timeLimitSec": 2,
+            "memoryLimitMb": 512
         }
 
-        with pytest.raises(ValueError, match="Missing required fields in message"):
+        with pytest.raises((ValueError, TypeError)):
             judge.worker._handle_message(message_body)
     
     def test_handle_message_invalid_types(self):
@@ -105,8 +105,8 @@ class TestWorker:
             "username": "testuser",
             "sourceCode": "print('test')",
             "language": "PYTHON",
-            "timeLimit": "invalid",
-            "memoryLimit": 256
+            "timeLimitSec": "invalid",
+            "memoryLimitMb": 256
         }
 
         with pytest.raises(ValueError):

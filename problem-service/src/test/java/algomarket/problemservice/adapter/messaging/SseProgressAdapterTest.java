@@ -26,6 +26,7 @@ class SseProgressAdapterTest {
 	@BeforeEach
 	void setUp() {
 		sseProgressAdapter = new SseProgressAdapter();
+		ReflectionTestUtils.setField(sseProgressAdapter, "sseTimeoutMs", 60 * 10000L);
 	}
 
 	@Test
@@ -39,7 +40,7 @@ class SseProgressAdapterTest {
 
 		// then
 		assertThat(emitter).isNotNull();
-		assertThat(emitter.getTimeout()).isEqualTo(60 * 1000L);
+		assertThat(emitter.getTimeout()).isEqualTo(60 * 10000L);
 
 		var emitters = (Map<String, SseEmitter>) ReflectionTestUtils.getField(sseProgressAdapter, "emitters");
 		assertThat(emitters).hasSize(1);

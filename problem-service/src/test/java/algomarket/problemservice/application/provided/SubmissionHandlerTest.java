@@ -5,12 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
-
-import algomarket.problemservice.application.required.SubmissionEventHandler;
 
 import algomarket.problemservice.application.event.JudgedEvent;
 import algomarket.problemservice.application.required.SubmissionRepository;
@@ -22,7 +17,6 @@ import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @Transactional
-@Import(SubmissionHandlerTest.TestConfig.class)
 class SubmissionHandlerTest {
 
 	@Autowired
@@ -36,6 +30,7 @@ class SubmissionHandlerTest {
 
 	@Autowired
 	EntityManager entityManager;
+
 
 	@Test
 	void submit() {
@@ -78,13 +73,5 @@ class SubmissionHandlerTest {
 		assertThat(submission).isNotNull();
 		assertThat(submission.getRuntimeMs()).isEqualTo(100);
 		assertThat(submission.getMemoryKb()).isEqualTo(5400);
-	}
-
-	@TestConfiguration
-	static class TestConfig {
-		@Bean
-		public SubmissionEventHandler submissionEventHandler() {
-			return submittedEvent -> {};
-		}
 	}
 }
