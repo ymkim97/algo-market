@@ -1,6 +1,7 @@
 package algomarket.problemservice.adapter.messaging;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,6 +23,7 @@ public class AsyncConfig {
 		executor.setThreadNamePrefix("async-");
 		executor.setWaitForTasksToCompleteOnShutdown(true);
 		executor.setAwaitTerminationSeconds(10);
+		executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
 		executor.initialize();
 		return executor;

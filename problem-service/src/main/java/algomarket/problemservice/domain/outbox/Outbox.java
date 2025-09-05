@@ -10,12 +10,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(
+	uniqueConstraints = @UniqueConstraint(
+		name = "uk_outbox_aggregate_type_id",
+		columnNames = {"aggregate_id", "aggregate_type"}
+	)
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Outbox {
 
@@ -23,7 +31,7 @@ public class Outbox {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	private Long aggregateId;
 
 	@Column(nullable = false)

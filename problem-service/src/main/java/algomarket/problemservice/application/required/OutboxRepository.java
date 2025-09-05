@@ -13,7 +13,7 @@ public interface OutboxRepository extends Repository<Outbox, String> {
 
 	void deleteByAggregateId(Long aggregateId);
 
-	List<Outbox> findByTimeStampBefore(LocalDateTime threshold);
+	List<Outbox> findTop100ByTimeStampBefore(LocalDateTime threshold);
 
 	boolean existsByAggregateId(Long aggregateId);
 }
