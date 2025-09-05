@@ -7,13 +7,13 @@ import org.springframework.data.repository.Repository;
 
 import algomarket.problemservice.domain.outbox.Outbox;
 
-public interface OutboxRepository extends Repository<Outbox, String> {
+public interface OutboxRepository extends Repository<Outbox, Long> {
 
 	Outbox save(Outbox message);
 
 	void deleteByAggregateId(Long aggregateId);
 
-	List<Outbox> findTop100ByTimeStampBefore(LocalDateTime threshold);
+	List<Outbox> findTop100ByTimeStampBeforeOrderByTimeStampAsc(LocalDateTime threshold);
 
 	boolean existsByAggregateId(Long aggregateId);
 }

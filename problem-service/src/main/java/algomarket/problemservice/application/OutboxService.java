@@ -35,7 +35,7 @@ public class OutboxService implements OutboxRetryHandler, OutboxCleanupHandler {
 		int retryThresholdMinutes = 1;
 		LocalDateTime threshold = LocalDateTime.now().minusMinutes(retryThresholdMinutes);
 		
-		List<Outbox> publishFailedMessages = outboxRepository.findTop100ByTimeStampBefore(threshold);
+		List<Outbox> publishFailedMessages = outboxRepository.findTop100ByTimeStampBeforeOrderByTimeStampAsc(threshold);
 
 		if (publishFailedMessages.isEmpty()) {
 			return;
