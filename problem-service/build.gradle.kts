@@ -30,6 +30,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
     // AWS
     implementation("io.awspring.cloud:spring-cloud-aws-starter:3.4.0")
@@ -48,8 +49,10 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:testcontainers:1.21.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     testImplementation("org.junit-pioneer:junit-pioneer:2.3.0")
     testImplementation("org.mockito:mockito-core:5.18.0")

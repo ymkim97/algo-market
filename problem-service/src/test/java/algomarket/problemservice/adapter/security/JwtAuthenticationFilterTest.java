@@ -59,8 +59,10 @@ class JwtAuthenticationFilterTest {
 
         // then
         var resultAuth = SecurityContextHolder.getContext().getAuthentication();
+		var userPrincipal = (UserPrincipal) resultAuth.getPrincipal();
+
         assertThat(resultAuth).isNotNull();
-        assertThat(resultAuth.getName()).isEqualTo("testUser");
+		assertThat(userPrincipal.username()).isEqualTo("testUser");
 
         verify(jwtManager).authenticate(token);
         verify(jwtManager).extractUsername(token);

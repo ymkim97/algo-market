@@ -58,13 +58,13 @@ public class Problem {
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {
-		state(timeLimit > 0.0 && timeLimit <= 100.0, "시간 제한은 0초 초과, 100초 이하로 설정 가능합니다.");
+		state(timeLimit > 0.0 && timeLimit <= 10.0, "시간 제한은 0초 초과, 10초 이하로 설정 가능합니다.");
 
 		return timeLimit;
 	}
 
 	private static Integer validateMemoryLimit(Integer memoryLimit) {
-		state(memoryLimit > 0 && memoryLimit <= 5120, "메모리 제한은 0MB 초과, 5120MB 이하로 설정 가능합니다.");
+		state(memoryLimit >= 128 && memoryLimit <= 512, "메모리 제한은 128MB 이상, 512MB 이하로 설정 가능합니다.");
 
 		return memoryLimit;
 	}

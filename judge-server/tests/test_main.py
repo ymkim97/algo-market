@@ -77,9 +77,13 @@ class TestLifespan:
         with TestClient(app):
             pass
         
-        # 스레드가 daemon=True로 생성되었는지 확인
-        mock_thread.assert_called_once_with(target=mock_consume_loop, daemon=True)
-        mock_thread_instance.start.assert_called_once()
+        # 3개의 스레드가 daemon=True로 생성되었는지 확인
+        assert mock_thread.call_count == 3
+        for call in mock_thread.call_args_list:
+            args, kwargs = call
+            assert kwargs.get('daemon') == True
+            assert kwargs.get('target') == mock_consume_loop
+        assert mock_thread_instance.start.call_count == 3
 
 
 class TestErrorHandling:

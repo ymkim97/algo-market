@@ -13,9 +13,14 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    worker_thread = threading.Thread(target=consume_loop, daemon=True)
-    worker_thread.start()
-    logging.info("SQS worker started in background thread.")
+    worker_thread1 = threading.Thread(target=consume_loop, daemon=True)
+    worker_thread2 = threading.Thread(target=consume_loop, daemon=True)
+    worker_thread3 = threading.Thread(target=consume_loop, daemon=True)
+
+    worker_thread1.start()
+    worker_thread2.start()
+    worker_thread3.start()
+    logging.info("SQS workers started in background thread.")
     yield
 
 app = FastAPI(lifespan=lifespan)

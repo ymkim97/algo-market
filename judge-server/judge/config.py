@@ -14,6 +14,10 @@ class Settings:
     s3_bucket_name: str | None = os.getenv("S3_BUCKET_NAME")
     s3_test_data_prefix: str = "problems/{problem_id}/test_data/"
 
+    redis_host: str = os.getenv("REDIS_HOST", "localhost")
+    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
+    redis_password: str | None = os.getenv("REDIS_PASSWORD")
+
     TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "temp_dir")
     PROBLEM_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "problems")
 

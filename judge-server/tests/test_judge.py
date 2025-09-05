@@ -42,9 +42,11 @@ class TestJudge:
         assert "run" in cmd
         assert "--rm" in cmd
         assert "amazoncorretto:21" in cmd
-        assert "java" in cmd
-        assert "-Xmx256m" in cmd
-        assert "Main" in cmd
+        cmd_str = ' '.join(cmd)
+        assert "java" in cmd_str
+        cmd_str = ' '.join(cmd)
+        assert "-Xmx256m" in cmd_str
+        assert "Main" in cmd_str
     
     def test_build_docker_command_python(self, temp_source_file):
         """Python용 Docker 명령어 생성 테스트"""
@@ -55,8 +57,10 @@ class TestJudge:
         assert "run" in cmd
         assert "--rm" in cmd
         assert "python:3.13-slim" in cmd
-        assert "python" in cmd
-        assert "Main.py" in cmd
+        cmd_str = ' '.join(cmd)
+        assert "python" in cmd_str
+        cmd_str = ' '.join(cmd)
+        assert "Main.py" in cmd_str
     
     def test_build_docker_command_unsupported_language(self, temp_source_file):
         """지원하지 않는 언어에 대한 예외 처리 테스트"""
@@ -70,18 +74,18 @@ class TestJudge:
         """정답 케이스 테스트"""
         # Mock 프로세스 설정
         mock_process = MagicMock()
-        mock_process.communicate.return_value = ("ABC", "")
+        mock_process.communicate.return_value = ("ABC", "user\t0m0.100s\nsys\t0m0.050s\nMEMORY_KB:1024")
         mock_process.returncode = 0
         mock_process.poll.return_value = 0
         mock_popen.return_value = mock_process
         
         python_file = temp_source_file["python"]
         result = judge.judge._evaluate_code(
-            python_file, "PYTHON", 5, 256, 
-            ["abc"], ["ABC"]
+            "testuser", python_file, "PYTHON", 5, 256, 
+            ["abc"], ["ABC"], 12345
         )
         
-        assert result == "ACCEPTED"
+        assert result[0] == "ACCEPTED"
         mock_popen.assert_called_once()
     
     @patch('judge.judge.subprocess.Popen')
@@ -95,11 +99,11 @@ class TestJudge:
         
         python_file = temp_source_file["python"]
         result = judge.judge._evaluate_code(
-            python_file, "PYTHON", 5, 256,
-            ["abc"], ["ABC"]
+            "testuser", python_file, "PYTHON", 5, 256,
+            ["abc"], ["ABC"], 12345
         )
         
-        assert result == "WRONG_ANSWER"
+        assert result[0] == "WRONG_ANSWER"
     
     @patch('judge.judge.subprocess.Popen')
     def test_evaluate_code_timeout(self, mock_popen, temp_source_file):
@@ -110,11 +114,11 @@ class TestJudge:
         
         python_file = temp_source_file["python"]
         result = judge.judge._evaluate_code(
-            python_file, "PYTHON", 5, 256,
-            ["abc"], ["ABC"]
+            "testuser", python_file, "PYTHON", 5, 256,
+            ["abc"], ["ABC"], 12345
         )
         
-        assert result == "TIME_LIMIT_EXCEEDED"
+        assert result[0] == "TIME_LIMIT_EXCEEDED"
         mock_process.kill.assert_called_once()
     
     @patch('judge.judge.subprocess.Popen')
@@ -128,11 +132,11 @@ class TestJudge:
         
         python_file = temp_source_file["python"]
         result = judge.judge._evaluate_code(
-            python_file, "PYTHON", 5, 256,
-            ["abc"], ["ABC"]
+            "testuser", python_file, "PYTHON", 5, 256,
+            ["abc"], ["ABC"], 12345
         )
         
-        assert result == "MEMORY_LIMIT_EXCEEDED"
+        assert result[0] == "MEMORY_LIMIT_EXCEEDED"
     
     @patch('judge.judge.subprocess.Popen')
     def test_evaluate_code_runtime_error(self, mock_popen, temp_source_file):
@@ -145,48 +149,57 @@ class TestJudge:
         
         python_file = temp_source_file["python"]
         result = judge.judge._evaluate_code(
-            python_file, "PYTHON", 5, 256,
-            ["abc"], ["ABC"]
+            "testuser", python_file, "PYTHON", 5, 256,
+            ["abc"], ["ABC"], 12345
         )
         
-        assert result == "RUNTIME_ERROR"
+        assert result[0] == "RUNTIME_ERROR"
     
+    @patch('judge.judge.fetch_test_data')
     @patch('judge.judge.compile_java')
     @patch('judge.judge._evaluate_code')
-    def test_run_java_compile_error(self, mock_evaluate, mock_compile, temp_source_file):
+    @patch('judge.judge.progress_publisher')
+    def test_run_java_compile_error(self, mock_progress, mock_evaluate, mock_compile, mock_fetch, temp_source_file):
         """Java 컴파일 오류 테스트"""
+        mock_fetch.return_value = (["input1"], ["output1"])
         mock_compile.return_value = 1  # 컴파일 실패
         
         java_file = temp_source_file["java"]
-        result = run(java_file, "JAVA", 5, 256, 1)
+        result = run(java_file, "JAVA", 5, 256, 1, 12345, "testuser")
         
-        assert result == "COMPILE_ERROR"
+        assert result[0] == "COMPILE_ERROR"
         mock_compile.assert_called_once_with(java_file)
         mock_evaluate.assert_not_called()
     
+    @patch('judge.judge.fetch_test_data')
     @patch('judge.judge.compile_java')
     @patch('judge.judge._evaluate_code')
-    def test_run_java_success(self, mock_evaluate, mock_compile, temp_source_file):
+    @patch('judge.judge.progress_publisher')
+    def test_run_java_success(self, mock_progress, mock_evaluate, mock_compile, mock_fetch, temp_source_file):
         """Java 성공 케이스 테스트"""
+        mock_fetch.return_value = (["input1"], ["output1"])
         mock_compile.return_value = 0  # 컴파일 성공
-        mock_evaluate.return_value = "ACCEPTED"
+        mock_evaluate.return_value = ("ACCEPTED", 100.5, 1024)
         
         java_file = temp_source_file["java"]
-        result = run(java_file, "JAVA", 5, 256, 1)
+        result = run(java_file, "JAVA", 5, 256, 1, 12345, "testuser")
         
-        assert result == "ACCEPTED"
+        assert result[0] == "ACCEPTED"
         mock_compile.assert_called_once_with(java_file)
         mock_evaluate.assert_called_once()
     
+    @patch('judge.judge.fetch_test_data')
     @patch('judge.judge._evaluate_code')
-    def test_run_python_success(self, mock_evaluate, temp_source_file):
+    @patch('judge.judge.progress_publisher')
+    def test_run_python_success(self, mock_progress, mock_evaluate, mock_fetch, temp_source_file):
         """Python 성공 케이스 테스트"""
-        mock_evaluate.return_value = "ACCEPTED"
+        mock_fetch.return_value = (["input1"], ["output1"])
+        mock_evaluate.return_value = ("ACCEPTED", 100.5, 1024)
         
         python_file = temp_source_file["python"]
-        result = run(python_file, "PYTHON", 5, 256, 1)
+        result = run(python_file, "PYTHON", 5, 256, 1, 12345, "testuser")
         
-        assert result == "ACCEPTED"
+        assert result[0] == "ACCEPTED"
         mock_evaluate.assert_called_once()
 
 

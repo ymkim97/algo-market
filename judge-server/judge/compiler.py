@@ -5,49 +5,78 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+DOCKER_IMAGES = {
+    "JAVA": "amazoncorretto:21",
+    "PYTHON": "python:3.13-slim"
+}
+
+DOCKER_BASE_CMD = [
+    "docker", "run", "--rm",
+    "--memory", "256m",
+    "--cpus", "0.5",
+    "--network", "none",
+    "--read-only",
+    "--cap-drop", "ALL",
+    "--security-opt", "no-new-privileges",
+    "--user", f"{os.getuid()}:{os.getgid()}",
+    "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m"
+]
+
 def compile_java(source_code_path) -> int:
     work_dir = os.path.dirname(source_code_path)
-    java_filename = os.path.basename(source_code_path)
 
-    docker_cmd = [
-        "docker", "run", "--rm",
-        "--memory", "256m",
-        "--cpus", "0.5", 
-        "--network", "none",
-        "--read-only",
-        "--cap-drop", "ALL",
-        "--security-opt", "no-new-privileges",
-        "--user", f"{os.getuid()}:{os.getgid()}",
-        "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m",
+    docker_cmd = _build_docker_command(work_dir, DOCKER_IMAGES["JAVA"])
+    docker_cmd.extend(["javac", "-encoding", "UTF-8", "-cp", ".", "Main.java"])
+
+    return _run_compilation(docker_cmd, "JAVA")
+
+def compile_python(source_code_path) -> int:
+    work_dir = os.path.dirname(source_code_path)
+
+    docker_cmd = _build_docker_command(work_dir, DOCKER_IMAGES["PYTHON"])
+    docker_cmd.extend(["python", "-W", "ignore", "-c", f"import py_compile; py_compile.compile(r'Main.py')"])
+
+    return _run_compilation(docker_cmd, "PYTHON")
+
+def _build_docker_command(work_dir: str, image: str) -> list[str]:
+    docker_cmd = DOCKER_BASE_CMD.copy()
+    docker_cmd.extend([
         "-v", f"{work_dir}:/app:rw",
         "-w", "/app",
-        "amazoncorretto:21",
-        "javac", "-encoding", "UTF-8", "-cp", ".", java_filename
-    ]
-    
-    logger.info(f"Compiling Java file: {java_filename}")
+        image
+    ])
+    return docker_cmd
+
+def _run_compilation(docker_cmd: list[str], language: str) -> int:
+    logger.info(f"Compiling {language}")
     
     try:
         result = subprocess.run(
             docker_cmd,
             capture_output=True,
             text=True,
-            timeout=30  # 컴파일은 더 여유있게
+            timeout=30
         )
         
-        if result.returncode != 0:
-            logger.error(f"Java compilation failed: {result.stderr}")
+        if language == "PYTHON":
+            has_error = result.returncode != 0 or "Error" in result.stderr
+            if has_error:
+                logger.error(f"Python compilation failed: {result.stderr}")
+                return -1
         else:
-            logger.info(f"Java compilation successful: {java_filename}")
-            
-        return result.returncode
+            if result.returncode != 0:
+                logger.error(f"{language} compilation failed: {result.stderr}")
+                return result.returncode
         
+        logger.info(f"{language} compilation successful")
+        return 0
+
     except subprocess.TimeoutExpired:
-        logger.error(f"Java compilation timeout for: {java_filename}")
+        logger.error(f"{language} compilation timed out")
         return -1
     except FileNotFoundError:
         logger.error("Docker not found")
         return -1
-    except Exception:
-        logger.error("Compilation failed with exception", exc_info=True)
+    except subprocess.SubprocessError as e:
+        logger.error(f"{language} compilation failed with exception: {e}")
         return -1

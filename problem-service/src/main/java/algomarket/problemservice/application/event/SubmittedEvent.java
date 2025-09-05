@@ -9,18 +9,18 @@ public record SubmittedEvent(
 	String username,
 	String sourceCode,
 	Language language,
-	Double timeLimit,
-	Integer memoryLimit
+	Double timeLimitSec,
+	Integer memoryLimitMb
 ) {
-	public static SubmittedEvent of(SubmitRequest submitRequest, String username, Long submissionId, Double timeLimit, Integer memoryLimit) {
+	public static SubmittedEvent of(SubmitRequest submitRequest, String username, Long submissionId, Double timeLimitSec, Integer memoryLimitMb) {
 		return new SubmittedEvent(
 			submissionId,
 			submitRequest.problemId(),
 			username,
 			submitRequest.sourceCode(),
 			submitRequest.language(),
-			timeLimit,
-			memoryLimit
+			timeLimitSec,
+			memoryLimitMb
 		);
 	}
 }

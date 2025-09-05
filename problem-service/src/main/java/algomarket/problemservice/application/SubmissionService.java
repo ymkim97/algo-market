@@ -1,5 +1,6 @@
 package algomarket.problemservice.application;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -8,7 +9,6 @@ import algomarket.problemservice.application.event.JudgedEvent;
 import algomarket.problemservice.application.event.SubmittedEvent;
 import algomarket.problemservice.application.provided.SubmissionHandler;
 import algomarket.problemservice.application.required.ProblemRepository;
-import algomarket.problemservice.application.required.SubmissionEventHandler;
 import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.submission.Submission;
@@ -21,7 +21,7 @@ public class SubmissionService implements SubmissionHandler {
 
 	private final SubmissionRepository submissionRepository;
 	private final ProblemRepository problemRepository;
-	private final SubmissionEventHandler submissionEventHandler;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Override
 	@Transactional
@@ -34,7 +34,7 @@ public class SubmissionService implements SubmissionHandler {
 
 		SubmittedEvent submittedEvent = SubmittedEvent.of(submitRequest, username, submission.getId(), problem.getTimeLimitSec(), problem.getMemoryLimitMb());
 
-		submissionEventHandler.produce(submittedEvent);
+		eventPublisher.publishEvent(submittedEvent);
 
 		return SubmitResponse.from(submission);
 	}

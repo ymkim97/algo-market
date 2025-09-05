@@ -35,7 +35,7 @@ class ProblemCreatorTest {
 
 	@Test
 	void create_withDuplicateTitle_fail() {
-		var firstRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.5, 1024);
+		var firstRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.5, 128);
 		var secondRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.0, 512);
 		problemCreator.create(firstRequest);
 

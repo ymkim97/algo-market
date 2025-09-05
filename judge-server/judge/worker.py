@@ -46,17 +46,17 @@ def consume_loop():
 
 
 def _handle_message(message_body: dict):
-    submission_id, problem_id, username, source_code, language, time_limit, memory_limit = (
-        message_body.get("submissionId"),
-        message_body.get("problemId"),
+    submission_id, problem_id, username, source_code, language, time_limit_sec, memory_limit_mb = (
+        int(message_body.get("submissionId")),
+        int(message_body.get("problemId")),
         message_body.get("username"),
         message_body.get("sourceCode"),
         message_body.get("language"),
-        int(message_body.get("timeLimit")),
-        int(message_body.get("memoryLimit")),
+        int(message_body.get("timeLimitSec")),
+        int(message_body.get("memoryLimitMb")),
     )
 
-    if not all([submission_id, problem_id, username, source_code, language, time_limit, memory_limit]):
+    if not all([submission_id, problem_id, username, source_code, language, time_limit_sec, memory_limit_mb]):
         raise ValueError(f"Missing required fields in message: {message_body}")
 
     logger.info(f"Start judging problem={problem_id}, lang={language}")
@@ -64,7 +64,7 @@ def _handle_message(message_body: dict):
     source_code_path = save_to_temp(source_code, submission_id, username, language)
     logger.info(f"SAVED PATH: {source_code_path}")
 
-    status_after_judge = run(source_code_path, language, time_limit, memory_limit, problem_id)
+    judge_result = run(source_code_path, language, time_limit_sec, memory_limit_mb, problem_id, submission_id, username)
 
     delete_temp(submission_id, username)
 
@@ -72,14 +72,14 @@ def _handle_message(message_body: dict):
         "submissionId": submission_id,
         "problemId": problem_id,
         "username": username,
-        "submitStatus": status_after_judge,
-        "runtimeMs": None, # TEMP
-        "memoryKb": None # TEMP
+        "submitStatus": judge_result[0],
+        "runtimeMs": judge_result[1],
+        "memoryKb": judge_result[2],
     }
 
     _send_message(event)
 
-    logger.info(f"Judging finished result={status_after_judge}")
+    logger.info(f"Judging finished result={judge_result[0]}")
 
 def _send_message(message):
     sqs = boto3.resource("sqs", region_name=settings.aws_region, aws_access_key_id=settings.aws_access_key_id,

@@ -55,8 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				jwtManager.authenticate(token);
 				String username = jwtManager.extractUsername(token);
 
+				UserPrincipal userPrincipal = new UserPrincipal(username);
 				Authentication authentication =
-					new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority("USER")));
+					new UsernamePasswordAuthenticationToken(userPrincipal, null, List.of(new SimpleGrantedAuthority("USER")));
 
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			} catch (JwtException e) {
