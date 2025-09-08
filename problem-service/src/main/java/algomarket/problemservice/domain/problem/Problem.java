@@ -57,6 +57,10 @@ public class Problem {
 		return problem;
 	}
 
+	public void submit() {
+		submitCount += 1;
+	}
+
 	private static Double validateTimeLimit(Double timeLimit) {
 		state(timeLimit > 0.0 && timeLimit <= 10.0, "시간 제한은 0초 초과, 10초 이하로 설정 가능합니다.");
 

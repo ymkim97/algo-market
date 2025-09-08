@@ -20,8 +20,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import algomarket.problemservice.application.provided.ProblemCreator;
+import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.application.required.ProgressNotifier;
 import algomarket.problemservice.application.required.ProgressSubscriber;
+import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemFixture;
 import algomarket.problemservice.domain.submission.Language;
 import algomarket.problemservice.domain.submission.SubmitRequest;
@@ -44,12 +46,15 @@ class SubmissionApiTest {
 	@Autowired
 	MockMvcTester mockMvcTester;
 
+	@Autowired
+	ProblemRepository problemRepository;
+
 	@MockitoBean
 	ProgressSubscriber progressSubscriber;
 
 	@Test
 	@WithMockUser
-	void submit_success() throws Exception {
+	void submit() throws Exception {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
 		var problemInfo = problemCreator.create(problemCreateRequest);
@@ -70,6 +75,27 @@ class SubmissionApiTest {
 			.hasPathSatisfying("$.submitStatus", value -> assertThat(value).isEqualTo(SubmitStatus.JUDGING.toString()))
 			.hasPathSatisfying("$.runtimeMs",  value -> assertThat(value).isNull())
 			.hasPathSatisfying("$.memoryKb",  value -> assertThat(value).isNull());
+	}
+
+	@Test
+	@WithMockUser
+	void submit_shouldIncreaseSubmitCount() throws JsonProcessingException {
+		// given
+		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
+		var problemInfo = problemCreator.create(problemCreateRequest);
+
+		var submitRequest = new SubmitRequest(problemInfo.problemId(), "System.out.println(\"Hello\");", Language.JAVA);
+
+		// when
+		mockMvcTester.post().uri("/submissions")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(submitRequest))
+			.exchange();
+
+		// then
+		Problem problem = problemRepository.findById(problemInfo.problemId()).orElseThrow();
+
+		assertThat(problem.getSubmitCount()).isEqualTo(1);
 	}
 
 	@Test
@@ -103,7 +129,7 @@ class SubmissionApiTest {
 			.exchange();
 
 		// when
-		var result = mockMvcTester.get().uri("/submissions/1/progress").asyncExchange();
+		var result = mockMvcTester.get().uri(String.format("/submissions/%d/progress", problemInfo.problemId())).asyncExchange();
 
 		// then
 		assertThat(result)
