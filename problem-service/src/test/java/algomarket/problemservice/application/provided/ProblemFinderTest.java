@@ -26,13 +26,14 @@ class ProblemFinderTest {
 	EntityManager entityManager;
 
 	@Test
-	void find() {
+	void findMyProblem() {
+		String username = "username";
 		var createRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfoResponse = problemCreator.create(createRequest);
+		var problemInfoResponse = problemCreator.create(createRequest, username);
 		entityManager.flush();
 		entityManager.clear();
 
-		var foundResponse = problemFinder.find(problemInfoResponse.problemId());
+		var foundResponse = problemFinder.findMyProblem(problemInfoResponse.problemId(), username);
 
 		assertThat(foundResponse.problemId()).isEqualTo(problemInfoResponse.problemId());
 	}

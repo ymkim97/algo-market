@@ -1,6 +1,6 @@
 package algomarket.problemservice.application.event;
 
-import algomarket.problemservice.domain.submission.Language;
+import algomarket.problemservice.domain.shared.Language;
 import algomarket.problemservice.domain.submission.SubmitRequest;
 
 public record SubmittedEvent(

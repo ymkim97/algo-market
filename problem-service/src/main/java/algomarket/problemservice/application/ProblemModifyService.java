@@ -19,10 +19,10 @@ public class ProblemModifyService implements ProblemCreator {
 
 	@Override
 	@Transactional
-	public ProblemInfoResponse create(ProblemCreateRequest createRequest) {
+	public ProblemInfoResponse create(ProblemCreateRequest createRequest, String username) {
 		checkDuplicateTitle(createRequest.title());
 
-		Problem problem = Problem.create(createRequest);
+		Problem problem = Problem.create(createRequest, username);
 
 		return ProblemInfoResponse.from(problemRepository.save(problem));
 	}

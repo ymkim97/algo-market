@@ -2,6 +2,7 @@ package algomarket.problemservice.domain.submission;
 
 import java.time.LocalDateTime;
 
+import algomarket.problemservice.domain.shared.Language;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

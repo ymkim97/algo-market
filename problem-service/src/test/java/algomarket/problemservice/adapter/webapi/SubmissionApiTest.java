@@ -25,7 +25,7 @@ import algomarket.problemservice.application.required.ProgressNotifier;
 import algomarket.problemservice.application.required.ProgressSubscriber;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemFixture;
-import algomarket.problemservice.domain.submission.Language;
+import algomarket.problemservice.domain.shared.Language;
 import algomarket.problemservice.domain.submission.SubmitRequest;
 import algomarket.problemservice.domain.submission.SubmitStatus;
 
@@ -57,7 +57,7 @@ class SubmissionApiTest {
 	void submit() throws Exception {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfo = problemCreator.create(problemCreateRequest);
+		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 
 		var submitRequest = new SubmitRequest(problemInfo.problemId(), "System.out.println(\"Hello\");", Language.JAVA);
 
@@ -82,7 +82,7 @@ class SubmissionApiTest {
 	void submit_shouldIncreaseSubmitCount() throws JsonProcessingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfo = problemCreator.create(problemCreateRequest);
+		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 
 		var submitRequest = new SubmitRequest(problemInfo.problemId(), "System.out.println(\"Hello\");", Language.JAVA);
 
@@ -120,7 +120,7 @@ class SubmissionApiTest {
 	void progress() throws JsonProcessingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfo = problemCreator.create(problemCreateRequest);
+		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 		var submitRequest = new SubmitRequest(problemInfo.problemId(), "System.out.println(\"Hello\");", Language.JAVA);
 
 		mockMvcTester.post().uri("/submissions")

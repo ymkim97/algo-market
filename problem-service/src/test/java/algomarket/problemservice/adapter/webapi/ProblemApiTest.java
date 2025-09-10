@@ -69,7 +69,7 @@ class ProblemApiTest {
 	@WithMockUser
 	void create_withDuplicateTitle_fail() throws JsonProcessingException {
 		var request = ProblemFixture.createProblemCreateRequest();
-		problemCreator.create(request);
+		problemCreator.create(request, "username");
 
 		var result = mockMvcTester.post().uri("/problems").contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(request)).exchange();
@@ -80,11 +80,12 @@ class ProblemApiTest {
 	}
 
 	@Test
-	void find() {
-		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest());
+	@WithMockUser(username = "username")
+	void findMyProblem() {
+		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest(), "username");
 		Long problemId = problemInfoResponse.problemId();
 
-		var result = mockMvcTester.get().uri("/problems/{problemId}", problemId).contentType(MediaType.APPLICATION_JSON)
+		var result = mockMvcTester.get().uri("/problems/my/{problemId}", problemId).contentType(MediaType.APPLICATION_JSON)
 			.exchange();
 
 		assertThat(result)
@@ -95,11 +96,11 @@ class ProblemApiTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(username = "username")
 	void initiateUpload() throws JsonProcessingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfoResponse = problemCreator.create(problemCreateRequest);
+		var problemInfoResponse = problemCreator.create(problemCreateRequest, "username");
 
 		var initiateUploadRequest = ProblemFixture.createInitiateUploadRequest(problemInfoResponse.problemId());
 
@@ -116,11 +117,11 @@ class ProblemApiTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(username = "username")
 	void initiateUpload_withInvalidFile_fail() throws JsonProcessingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfoResponse = problemCreator.create(problemCreateRequest);
+		var problemInfoResponse = problemCreator.create(problemCreateRequest, "username");
 
 		var initiateUploadRequest = ProblemFixture.createInitiateUploadRequest("wrongFile.abc", problemInfoResponse.problemId());
 

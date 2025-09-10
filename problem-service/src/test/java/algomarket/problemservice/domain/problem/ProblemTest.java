@@ -13,10 +13,10 @@ class ProblemTest {
 	void create() {
 		var request = ProblemFixture.createProblemCreateRequest();
 
-		Problem problem = Problem.create(request);
+		Problem problem = Problem.create(request, "username");
 
 		assertThat(problem.getSubmitCount()).isZero();
-		assertThat(problem.getProblemStatus()).isEqualTo(ProblemStatus.INSPECTING);
+		assertThat(problem.getProblemStatus()).isEqualTo(ProblemStatus.DRAFT);
 	}
 
 	@ParameterizedTest
@@ -24,6 +24,6 @@ class ProblemTest {
 	void create_withLimitSettings_fail(Double timeLimit, Integer memoryLimit) {
 		var requestWithInvalidLimit = ProblemFixture.createProblemCreateRequest(timeLimit, memoryLimit);
 
-		assertThatThrownBy(() -> Problem.create(requestWithInvalidLimit)).isInstanceOf(IllegalStateException.class);
+		assertThatThrownBy(() -> Problem.create(requestWithInvalidLimit, "username")).isInstanceOf(IllegalStateException.class);
 	}
 }

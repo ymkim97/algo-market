@@ -26,7 +26,7 @@ class ProblemCreatorTest {
 	void create() {
 		var request = ProblemFixture.createProblemCreateRequest();
 
-		var problemInfoResponse = problemCreator.create(request);
+		var problemInfoResponse = problemCreator.create(request, "username");
 		entityManager.flush();
 
 		assertThat(problemInfoResponse.problemId()).isNotNull();
@@ -37,11 +37,11 @@ class ProblemCreatorTest {
 	void create_withDuplicateTitle_fail() {
 		var firstRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.5, 128);
 		var secondRequest = ProblemFixture.createProblemCreateRequest("ABC", 1.0, 512);
-		problemCreator.create(firstRequest);
+		problemCreator.create(firstRequest, "username");
 
 		entityManager.flush();
 		entityManager.clear();
 
-		assertThatThrownBy(() -> problemCreator.create(secondRequest)).isInstanceOf(DuplicateTitleException.class);
+		assertThatThrownBy(() -> problemCreator.create(secondRequest, "username")).isInstanceOf(DuplicateTitleException.class);
 	}
 }

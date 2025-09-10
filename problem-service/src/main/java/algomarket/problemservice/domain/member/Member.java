@@ -35,7 +35,7 @@ public class Member {
 	@AttributeOverride(name = "address", column = @Column(name = "email", unique = true))
 	private Email email;
 
-	@Column(nullable = false, length = 20, unique = true)
+	@Column(nullable = false, length = 30, unique = true)
 	private String username;
 
 	@Column(nullable = false, length = 255)
