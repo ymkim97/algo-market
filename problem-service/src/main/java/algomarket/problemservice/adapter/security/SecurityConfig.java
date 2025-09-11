@@ -34,7 +34,8 @@ public class SecurityConfig {
 			.authorizeHttpRequests(authorizeRequests -> authorizeRequests
 			.requestMatchers(HttpMethod.POST, "/login").permitAll()
 			.requestMatchers(HttpMethod.POST, "/members").permitAll()
-			.requestMatchers(HttpMethod.GET, "/problems/**").permitAll()
+			.requestMatchers(HttpMethod.GET, "/problems").permitAll()
+			.requestMatchers(HttpMethod.GET, "/problems/{id:\\d+}").permitAll()
 			.requestMatchers(HttpMethod.GET, "/submissions/*/progress").permitAll()
 			.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 			.anyRequest().authenticated())
