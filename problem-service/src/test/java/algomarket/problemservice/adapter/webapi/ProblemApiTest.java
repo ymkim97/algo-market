@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +21,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.required.ProblemRepository;
+import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemFixture;
 import algomarket.problemservice.domain.problem.ProblemInfoResponse;
+import algomarket.problemservice.domain.problem.ProblemStatus;
+import algomarket.problemservice.domain.shared.Language;
+import algomarket.problemservice.domain.submission.Submission;
+import algomarket.problemservice.domain.submission.SubmitRequest;
+import algomarket.problemservice.domain.submission.SubmitStatus;
 
 @SpringBootTest
 @Transactional
@@ -34,6 +41,9 @@ class ProblemApiTest {
 
 	@Autowired
 	ProblemCreator problemCreator;
+
+	@Autowired
+	SubmissionRepository submissionRepository;
 
 	@Autowired
 	ProblemRepository problemRepository;
@@ -131,5 +141,67 @@ class ProblemApiTest {
 
 		assertThat(result)
 			.hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	@WithMockUser(username = "author")
+	void publishMyProblem() {
+		// given
+		String username = "author";
+		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest(), username);
+		Long problemId = problemInfoResponse.problemId();
+
+		var submitRequest1 = new SubmitRequest(problemId, "CODE", Language.JAVA);
+		var submitRequest2 = new SubmitRequest(problemId, "CODE", Language.PYTHON);
+
+		var submission1 = Submission.submit(submitRequest1, username);
+		var submission2 = Submission.submit(submitRequest2, username);
+
+		ReflectionTestUtils.setField(submission1, "submitStatus", SubmitStatus.ACCEPTED);
+		ReflectionTestUtils.setField(submission2, "submitStatus", SubmitStatus.ACCEPTED);
+
+		problemRepository.findById(problemId).orElseThrow();
+
+		submissionRepository.save(submission1);
+		submissionRepository.save(submission2);
+
+		// when
+		var result = mockMvcTester.put().uri("/problems/publish/{problemId}", problemId).exchange();
+
+		// then
+		assertThat(result)
+			.hasStatus(HttpStatus.OK);
+
+		Problem problem = problemRepository.findById(problemId).orElseThrow();
+
+		assertThat(problem.getProblemStatus()).isEqualTo(ProblemStatus.PUBLIC);
+	}
+
+	@Test
+	@WithMockUser(username = "author")
+	void publishMyProblem_withInsufficientSolve_fail() {
+		// given
+		String username = "author";
+		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest(), username);
+		Long problemId = problemInfoResponse.problemId();
+
+		var submitRequest1 = new SubmitRequest(problemId, "CODE", Language.JAVA);
+
+		var submission1 = Submission.submit(submitRequest1, username);
+
+		ReflectionTestUtils.setField(submission1, "submitStatus", SubmitStatus.ACCEPTED);
+
+		submissionRepository.save(submission1);
+
+		// when
+		var result = mockMvcTester.put().uri("/problems/publish/{problemId}", problemId).exchange();
+
+		// then
+		assertThat(result)
+			.hasStatus(HttpStatus.BAD_REQUEST);
+
+		Problem problem = problemRepository.findById(problemId).orElseThrow();
+
+		assertThat(problem.getProblemStatus()).isEqualTo(ProblemStatus.DRAFT);
 	}
 }
