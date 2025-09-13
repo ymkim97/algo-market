@@ -24,8 +24,14 @@ public class Problem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = true, unique = true)
+	private Long number;
+
 	@Column(nullable = false,  unique = true, length = 100)
 	private String title;
+
+	@Column(nullable = false,  length = 30)
+	private String authorUsername;
 
 	@Column(nullable = false, columnDefinition = "MEDIUMTEXT")
 	private String description;
@@ -43,22 +49,33 @@ public class Problem {
 	@Column(nullable = false)
 	private Integer memoryLimitMb;
 
-	public static Problem create(ProblemCreateRequest createRequest) {
+	public static Problem create(ProblemCreateRequest createRequest, String authorUsername) {
 		Problem problem = new Problem();
 
 		problem.title = Objects.requireNonNull(createRequest.title());
+		problem.authorUsername = Objects.requireNonNull(authorUsername);
 		problem.description = Objects.requireNonNull(createRequest.description());
 		problem.timeLimitSec = validateTimeLimit(createRequest.timeLimitSec());
 		problem.memoryLimitMb = validateMemoryLimit(createRequest.memoryLimitMb());
 
+		problem.number = null;
 		problem.submitCount = 0;
-		problem.problemStatus = ProblemStatus.INSPECTING;
+		problem.problemStatus = ProblemStatus.DRAFT;
 
 		return problem;
 	}
 
 	public void submit() {
 		submitCount += 1;
+	}
+
+	public void makePublic(Long problemNumber) {
+		if (problemStatus == ProblemStatus.PUBLIC) {
+			throw new IllegalStateException("이미 공개된 문제입니다.");
+		}
+
+		problemStatus = ProblemStatus.PUBLIC;
+		number = problemNumber;
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {

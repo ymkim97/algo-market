@@ -74,4 +74,8 @@ public class Submission {
 			this.memoryKb = null;
 		}
 	}
+
+	public boolean isSolved() {
+		return submitStatus == SubmitStatus.ACCEPTED;
+	}
 }

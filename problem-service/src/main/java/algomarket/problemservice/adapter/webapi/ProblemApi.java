@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -59,6 +60,13 @@ public class ProblemApi {
 		MyProblemInfoResponse response = problemFinder.findMyProblem(problemId, username);
 
 		return ResponseEntity.ok(response);
+	}
+
+	@PutMapping("/publish/{problemId}")
+	public ResponseEntity<Void> publishMyProblem(@PathVariable Long problemId, @CurrentUsername String username) {
+		problemCreator.makePublic(problemId, username);
+
+		return ResponseEntity.ok().build();
 	}
 
 	@PostMapping
