@@ -2,6 +2,7 @@ package algomarket.problemservice.adapter.webapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -14,9 +15,11 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import algomarket.problemservice.application.provided.ProblemCreator;
@@ -116,20 +119,23 @@ class SubmissionApiTest {
 	}
 
 	@Test
-	@WithMockUser
-	void progress() throws JsonProcessingException {
+	@WithMockUser(username = "username")
+	void progress() throws JsonProcessingException, UnsupportedEncodingException {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
 		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 		var submitRequest = new SubmitRequest(problemInfo.problemId(), "System.out.println(\"Hello\");", Language.JAVA);
 
-		mockMvcTester.post().uri("/submissions")
+		MvcTestResult submissionResult = mockMvcTester.post().uri("/submissions")
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(submitRequest))
 			.exchange();
 
+		JsonNode jsonNode = objectMapper.readTree(submissionResult.getResponse().getContentAsString());
+		Long submissionId = jsonNode.get("submissionId").asLong();
+
 		// when
-		var result = mockMvcTester.get().uri(String.format("/submissions/%d/progress", problemInfo.problemId())).asyncExchange();
+		var result = mockMvcTester.get().uri(String.format("/submissions/%d/progress", submissionId)).asyncExchange();
 
 		// then
 		assertThat(result)
