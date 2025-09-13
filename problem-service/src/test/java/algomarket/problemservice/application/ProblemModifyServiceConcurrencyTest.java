@@ -19,7 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.Problem;
-import algomarket.problemservice.domain.problem.ProblemCreateRequest;
+import algomarket.problemservice.domain.problem.ProblemFixture;
 import algomarket.problemservice.domain.problem.ProblemStatus;
 import algomarket.problemservice.domain.shared.Language;
 import algomarket.problemservice.domain.submission.Submission;
@@ -46,15 +46,7 @@ class ProblemModifyServiceConcurrencyTest {
 
 		List<Long> problemIds = new ArrayList<>();
 		for (int i = 0; i < threadCount; i++) {
-			Problem problem = Problem.create(
-				new ProblemCreateRequest(
-					"Test Problem " + i,
-					"Test Description " + i,
-					1.0,
-					256
-				),
-				authorUsername
-			);
+			Problem problem = Problem.create(ProblemFixture.createProblemCreateRequest("title" + i, 1.0, 512), authorUsername);
 			problemIds.add(problemRepository.save(problem).getId());
 		}
 

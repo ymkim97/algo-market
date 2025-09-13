@@ -1,5 +1,7 @@
 package algomarket.problemservice.domain.problem;
 
+import java.util.List;
+
 public record ProblemInfoResponse(
 	Long problemId,
 
@@ -13,10 +15,12 @@ public record ProblemInfoResponse(
 
 	Double timeLimit,
 
-	Integer memoryLimit
+	Integer memoryLimit,
+
+	List<ExampleTestCase> exampleTestCases
 ) {
 	public static ProblemInfoResponse from(Problem problem) {
 		return new ProblemInfoResponse(problem.getId(), problem.getNumber(), problem.getTitle(), problem.getDescription(), problem.getSubmitCount(),
-			problem.getTimeLimitSec(), problem.getMemoryLimitMb());
+			problem.getTimeLimitSec(), problem.getMemoryLimitMb(), problem.getExampleTestCases());
 	}
 }

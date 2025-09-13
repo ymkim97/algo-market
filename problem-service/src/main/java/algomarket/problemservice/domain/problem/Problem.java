@@ -2,7 +2,11 @@ package algomarket.problemservice.domain.problem;
 
 import static org.springframework.util.Assert.state;
 
+import java.util.List;
 import java.util.Objects;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,6 +53,14 @@ public class Problem {
 	@Column(nullable = false)
 	private Integer memoryLimitMb;
 
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(nullable = true, columnDefinition = "JSON")
+	private List<ExampleTestCase> exampleTestCases;
+
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(nullable = true, columnDefinition = "JSON")
+	private List<TestCaseUrl> testCaseUrls;
+
 	public static Problem create(ProblemCreateRequest createRequest, String authorUsername) {
 		Problem problem = new Problem();
 
@@ -57,6 +69,8 @@ public class Problem {
 		problem.description = Objects.requireNonNull(createRequest.description());
 		problem.timeLimitSec = validateTimeLimit(createRequest.timeLimitSec());
 		problem.memoryLimitMb = validateMemoryLimit(createRequest.memoryLimitMb());
+		problem.exampleTestCases = createRequest.exampleTestCases();
+		problem.testCaseUrls = createRequest.testCaseUrls();
 
 		problem.number = null;
 		problem.submitCount = 0;
@@ -76,6 +90,17 @@ public class Problem {
 
 		problemStatus = ProblemStatus.PUBLIC;
 		number = problemNumber;
+	}
+
+	public void modifyDraft(ProblemDraftModifyRequest modifyDraftRequest) {
+		if (problemStatus != ProblemStatus.DRAFT) {
+			throw new IllegalStateException("임시저장 상태가 아닌 문제입니다.");
+		}
+
+		title = Objects.requireNonNull(modifyDraftRequest.title());
+		description = Objects.requireNonNull(modifyDraftRequest.description());
+		timeLimitSec = validateTimeLimit(modifyDraftRequest.timeLimitSec());
+		memoryLimitMb = validateMemoryLimit(modifyDraftRequest.memoryLimitMb());
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {

@@ -1,5 +1,8 @@
 package algomarket.problemservice.domain.problem;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import algomarket.problemservice.application.dto.InitiateUploadRequest;
 
 public class ProblemFixture {
@@ -13,7 +16,12 @@ public class ProblemFixture {
 	}
 
 	public static ProblemCreateRequest createProblemCreateRequest(String title, Double timeLimit, Integer memoryLimit) {
-		return new ProblemCreateRequest(title, "Description", timeLimit, memoryLimit);
+		List<TestCaseUrl> testCaseUrls = new ArrayList<>();
+
+		for (int i = 0; i < 10; i++) {
+			testCaseUrls.add(new TestCaseUrl("in", "out"));
+		}
+		return new ProblemCreateRequest(title, "Description", timeLimit, memoryLimit, null, testCaseUrls);
 	}
 
 	public static InitiateUploadRequest createInitiateUploadRequest(Long problemId) {
