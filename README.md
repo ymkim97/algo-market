@@ -62,6 +62,8 @@ algo-market/
 
 ### 1. 문제 관리
 - 문제 생성, 조회, 수정, 삭제
+- 문제 공개 기능 (제출자가 2개 이상의 언어로 해결해야 가능)
+- 문제 검색
 - 테스트 케이스 관리
 - 이미지 및 대용량 파일 지원 (S3 연동)
 
@@ -86,6 +88,10 @@ algo-market/
 - **Redis Pub/Sub** - 실시간 채점 진행상황 전달
 - 채점 요청/결과 큐 분리
 
+### 6. 동시성 제어
+- **Redis 분산락** - 문제 수정/공개 시 동시성 제어
+- **AOP 기반 락 관리** - 어노테이션으로 간편한 락 적용
+
 ## 🛠 기술 스택
 
 ### Problem Service (Backend)
@@ -93,6 +99,8 @@ algo-market/
 - **Spring Data JPA** - 데이터베이스 연동
 - **Spring Security** - 인증/인가 (JWT)
 - **Server-Sent Events** - 실시간 데이터 스트리밍
+- **Spring AOP** - 분산락 구현
+- **Redisson** - Redis 분산락 클라이언트
 - **AWS SDK** - S3, SQS 연동
 - **MySQL** - 데이터베이스
 
