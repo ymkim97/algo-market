@@ -8,12 +8,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import algomarket.problemservice.adapter.lock.DistributedLockException;
 import algomarket.problemservice.adapter.storage.UnsupportedFileExtensionException;
 import algomarket.problemservice.application.NotFoundException;
 import algomarket.problemservice.domain.member.DuplicateEmailException;
 import algomarket.problemservice.domain.member.DuplicateUsernameException;
 import algomarket.problemservice.domain.member.PasswordOrUsernameMismatchException;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
+import algomarket.problemservice.domain.service.InsufficientSolvedLanguagesException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -74,6 +76,20 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 		log.error(ex.getMessage(), ex);
 
 		return getProblemDetail(ex, HttpStatus.NOT_FOUND, ex.getMessage());
+	}
+
+	@ExceptionHandler(InsufficientSolvedLanguagesException.class)
+	public ProblemDetail handleInsufficientSolvedLanguages(InsufficientSolvedLanguagesException ex) {
+		log.error(ex.getMessage(), ex);
+
+		return getProblemDetail(ex, HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
+
+	@ExceptionHandler(DistributedLockException.class)
+	public ProblemDetail handleDistributedLock(DistributedLockException ex) {
+		log.error(ex.getMessage(), ex);
+
+		return getProblemDetail(ex, HttpStatus.CONFLICT, "서버 내에서 동시 처리가 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
 	}
 
 	private static ProblemDetail getProblemDetail(RuntimeException ex, HttpStatus status, String message) {
