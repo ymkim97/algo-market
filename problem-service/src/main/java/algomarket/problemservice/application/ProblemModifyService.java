@@ -13,6 +13,7 @@ import algomarket.problemservice.domain.problem.DuplicateTitleException;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;
 import algomarket.problemservice.domain.problem.ProblemInfoResponse;
+import algomarket.problemservice.domain.problem.ProblemDraftModifyRequest;
 import algomarket.problemservice.domain.service.ProblemPublisher;
 import algomarket.problemservice.domain.submission.Submission;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,16 @@ public class ProblemModifyService implements ProblemCreator {
 	}
 
 	@Override
-	public void saveDraftChanges(String username) {
-		// TODO: 임시저장
+	@Transactional
+	public ProblemInfoResponse saveDraftChanges(ProblemDraftModifyRequest draftModifyRequest, String username) {
+		checkDuplicateTitle(draftModifyRequest.title());
+
+		Problem problem = problemRepository.findByIdAndAuthorUsername(draftModifyRequest.problemId(), username)
+			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제입니다. - ID: " + draftModifyRequest.problemId()));
+
+		problem.modifyDraft(draftModifyRequest);
+
+		return ProblemInfoResponse.from(problemRepository.save(problem));
 	}
 
 	@Override

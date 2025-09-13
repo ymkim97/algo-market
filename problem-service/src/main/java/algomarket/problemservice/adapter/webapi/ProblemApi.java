@@ -21,6 +21,7 @@ import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.provided.ProblemFileManager;
 import algomarket.problemservice.application.provided.ProblemFinder;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;
+import algomarket.problemservice.domain.problem.ProblemDraftModifyRequest;
 import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +76,13 @@ public class ProblemApi {
 
 		return ResponseEntity.created(URI.create("/problems/" + response.problemId()))
 			.body(response);
+	}
+
+	@PutMapping("/draft")
+	public ResponseEntity<ProblemInfoResponse> saveDraft(@RequestBody @Valid ProblemDraftModifyRequest request, @CurrentUsername String username) {
+		ProblemInfoResponse response = problemCreator.saveDraftChanges(request, username);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@PostMapping("/initiate-upload")
