@@ -1,5 +1,6 @@
 package algomarket.problemservice.application.required;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.repository.Repository;
@@ -14,4 +15,6 @@ public interface SubmissionRepository extends Repository<Submission, Long> {
 	Optional<Submission> findById(Long id);
 
 	boolean existsByUsernameAndIdAndSubmitStatus(String username, Long id,  SubmitStatus status);
+
+	List<Submission> findAllByProblemIdAndUsername(Long problemId, String username);
 }

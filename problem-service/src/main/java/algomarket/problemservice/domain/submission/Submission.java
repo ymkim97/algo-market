@@ -2,6 +2,7 @@ package algomarket.problemservice.domain.submission;
 
 import java.time.LocalDateTime;
 
+import algomarket.problemservice.domain.shared.Language;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -72,5 +73,9 @@ public class Submission {
 			this.runtimeMs = null;
 			this.memoryKb = null;
 		}
+	}
+
+	public boolean isSolved() {
+		return submitStatus == SubmitStatus.ACCEPTED;
 	}
 }

@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import algomarket.problemservice.application.event.JudgedEvent;
 import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.ProblemFixture;
-import algomarket.problemservice.domain.submission.Language;
+import algomarket.problemservice.domain.shared.Language;
 import algomarket.problemservice.domain.submission.SubmitRequest;
 import algomarket.problemservice.domain.submission.SubmitStatus;
 import jakarta.persistence.EntityManager;
@@ -36,7 +36,7 @@ class SubmissionHandlerTest {
 	void submit() {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfo = problemCreator.create(problemCreateRequest);
+		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 		entityManager.flush();
 		entityManager.clear();
 
@@ -55,7 +55,7 @@ class SubmissionHandlerTest {
 	void finishSubmission() {
 		// given
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
-		var problemInfo = problemCreator.create(problemCreateRequest);
+		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 
 		var submitRequest = new SubmitRequest(problemInfo.problemId(), "Code", Language.JAVA);
 		var submitResponse = submissionHandler.submit(submitRequest, "user");

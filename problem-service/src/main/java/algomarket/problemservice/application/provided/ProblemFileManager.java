@@ -5,5 +5,5 @@ import algomarket.problemservice.application.dto.InitiateUploadResponse;
 
 public interface ProblemFileManager {
 
-	InitiateUploadResponse initiateUpload(InitiateUploadRequest request);
+	InitiateUploadResponse initiateUpload(InitiateUploadRequest request, String username);
 }

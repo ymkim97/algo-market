@@ -9,7 +9,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-public record ProblemCreateRequest(
+public record ProblemDraftModifyRequest(
+	@NotNull @Positive Long problemId,
+
 	@NotBlank @Size(max = 100) String title,
 
 	@NotBlank String description,

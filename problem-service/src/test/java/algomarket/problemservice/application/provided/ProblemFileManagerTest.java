@@ -26,14 +26,14 @@ class ProblemFileManagerTest {
 	@Test
 	void initiateUpload() {
 		// given
-		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest());
+		var problemInfoResponse = problemCreator.create(ProblemFixture.createProblemCreateRequest(), "username");
 		entityManager.flush();
 		entityManager.clear();
 
 		var initiateUploadRequest = ProblemFixture.createInitiateUploadRequest(problemInfoResponse.problemId());
 
 		// when
-		var initiateUploadResponse = problemFileManager.initiateUpload(initiateUploadRequest);
+		var initiateUploadResponse = problemFileManager.initiateUpload(initiateUploadRequest, "username");
 
 		// then
 		assertThat(initiateUploadResponse.key()).isNotNull();

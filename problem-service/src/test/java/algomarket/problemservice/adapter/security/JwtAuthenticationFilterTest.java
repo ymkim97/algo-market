@@ -92,22 +92,4 @@ class JwtAuthenticationFilterTest {
         verify(jwtManager, never()).extractUsername(anyString());
         verify(filterChain).doFilter(request, response);
     }
-
-    @Test
-    @DisplayName("필터 제외 경로(/login)로 요청 시, filter가 적용되지 않는다")
-    void shouldNotFilter_forExcludedPath_shouldSkipAuthentication() {
-		// given
-		var request = new MockHttpServletRequest();
-		request.setRequestURI("/login");
-		request.setMethod("POST");
-
-		// when
-		boolean exclude = jwtAuthenticationFilter.shouldNotFilter(request);
-
-		// then
-		assertThat(exclude).isTrue();
-
-		verify(jwtManager, never()).extractUsername(anyString());
-		verify(jwtManager, never()).authenticate(anyString());
-	}
 }

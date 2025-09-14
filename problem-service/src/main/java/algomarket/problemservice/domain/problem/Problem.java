@@ -2,7 +2,11 @@ package algomarket.problemservice.domain.problem;
 
 import static org.springframework.util.Assert.state;
 
+import java.util.List;
 import java.util.Objects;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,8 +28,14 @@ public class Problem {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = true, unique = true)
+	private Long number;
+
 	@Column(nullable = false,  unique = true, length = 100)
 	private String title;
+
+	@Column(nullable = false,  length = 30)
+	private String authorUsername;
 
 	@Column(nullable = false, columnDefinition = "MEDIUMTEXT")
 	private String description;
@@ -43,18 +53,58 @@ public class Problem {
 	@Column(nullable = false)
 	private Integer memoryLimitMb;
 
-	public static Problem create(ProblemCreateRequest createRequest) {
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(nullable = true, columnDefinition = "JSON")
+	private List<ExampleTestCase> exampleTestCases;
+
+	@JdbcTypeCode(SqlTypes.JSON)
+	@Column(nullable = true, columnDefinition = "JSON")
+	private List<TestCaseUrl> testCaseUrls;
+
+	public static Problem create(ProblemCreateRequest createRequest, String authorUsername) {
 		Problem problem = new Problem();
 
 		problem.title = Objects.requireNonNull(createRequest.title());
+		problem.authorUsername = Objects.requireNonNull(authorUsername);
 		problem.description = Objects.requireNonNull(createRequest.description());
 		problem.timeLimitSec = validateTimeLimit(createRequest.timeLimitSec());
 		problem.memoryLimitMb = validateMemoryLimit(createRequest.memoryLimitMb());
+		problem.exampleTestCases = createRequest.exampleTestCases();
+		problem.testCaseUrls = createRequest.testCaseUrls();
 
+		problem.number = null;
 		problem.submitCount = 0;
-		problem.problemStatus = ProblemStatus.INSPECTING;
+		problem.problemStatus = ProblemStatus.DRAFT;
 
 		return problem;
+	}
+
+	public void submit() {
+		if (problemStatus == ProblemStatus.PUBLIC) {
+			submitCount += 1;
+		}
+	}
+
+	public void makePublic(Long problemNumber) {
+		if (problemStatus == ProblemStatus.PUBLIC) {
+			throw new IllegalStateException("이미 공개된 문제입니다.");
+		}
+
+		problemStatus = ProblemStatus.PUBLIC;
+		number = problemNumber;
+	}
+
+	public void modifyDraft(ProblemDraftModifyRequest modifyDraftRequest) {
+		if (problemStatus != ProblemStatus.DRAFT) {
+			throw new IllegalStateException("임시저장 상태가 아닌 문제입니다.");
+		}
+
+		title = Objects.requireNonNull(modifyDraftRequest.title());
+		description = Objects.requireNonNull(modifyDraftRequest.description());
+		timeLimitSec = validateTimeLimit(modifyDraftRequest.timeLimitSec());
+		memoryLimitMb = validateMemoryLimit(modifyDraftRequest.memoryLimitMb());
+		exampleTestCases = modifyDraftRequest.exampleTestCases();
+		testCaseUrls = modifyDraftRequest.testCaseUrls();
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {

@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +22,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,21 +31,8 @@ import algomarket.problemservice.application.event.ProgressEvent;
 import algomarket.problemservice.domain.submission.SubmitStatus;
 
 @SpringBootTest
-@Testcontainers
 @Import(RedisProgressSubscriberTest.TestEventCapturer.class)
 class RedisProgressSubscriberTest {
-
-	@Container
-	static GenericContainer<?> redis = new GenericContainer<>("redis:8.2.1-alpine")
-		.withExposedPorts(6379)
-		.waitingFor(Wait.forListeningPort())
-		.withStartupTimeout(Duration.ofSeconds(60));
-
-	@DynamicPropertySource
-	static void configureProperties(DynamicPropertyRegistry registry) {
-		registry.add("spring.data.redis.host", redis::getHost);
-		registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
-	}
 
 	@Autowired
 	RedisProgressSubscriber redisProgressSubscriber;

@@ -36,9 +36,9 @@ class ProgressStreamerTest {
 
 	@BeforeEach
 	void setUp() {
-			progressStreamer = new ProgressService(
-				progressNotifier,
-				progressSubscriber,
+		progressStreamer = new ProgressService(
+			progressNotifier,
+			progressSubscriber,
 			submissionRepository
 		);
 	}
