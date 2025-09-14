@@ -28,6 +28,7 @@ import algomarket.problemservice.application.required.ProgressNotifier;
 import algomarket.problemservice.application.required.ProgressSubscriber;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemFixture;
+import algomarket.problemservice.domain.problem.ProblemStatus;
 import algomarket.problemservice.domain.shared.Language;
 import algomarket.problemservice.domain.submission.SubmitRequest;
 import algomarket.problemservice.domain.submission.SubmitStatus;
@@ -87,6 +88,9 @@ class SubmissionApiTest {
 		var problemCreateRequest = ProblemFixture.createProblemCreateRequest();
 		var problemInfo = problemCreator.create(problemCreateRequest, "username");
 
+		Problem problem = problemRepository.findById(problemInfo.problemId()).orElseThrow();
+		ReflectionTestUtils.setField(problem, "problemStatus", ProblemStatus.PUBLIC);
+
 		var submitRequest = new SubmitRequest(problemInfo.problemId(), "System.out.println(\"Hello\");", Language.JAVA);
 
 		// when
@@ -96,7 +100,7 @@ class SubmissionApiTest {
 			.exchange();
 
 		// then
-		Problem problem = problemRepository.findById(problemInfo.problemId()).orElseThrow();
+		problem = problemRepository.findById(problemInfo.problemId()).orElseThrow();
 
 		assertThat(problem.getSubmitCount()).isEqualTo(1);
 	}

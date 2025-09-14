@@ -29,7 +29,7 @@ public class ProblemModifyService implements ProblemCreator {
 	@Override
 	@Transactional
 	public ProblemInfoResponse create(ProblemCreateRequest createRequest, String username) {
-		checkDuplicateTitle(createRequest.title());
+		checkDuplicateTitle(createRequest.title(), null);
 
 		Problem problem = Problem.create(createRequest, username);
 
@@ -39,7 +39,7 @@ public class ProblemModifyService implements ProblemCreator {
 	@Override
 	@Transactional
 	public ProblemInfoResponse saveDraftChanges(ProblemDraftModifyRequest draftModifyRequest, String username) {
-		checkDuplicateTitle(draftModifyRequest.title());
+		checkDuplicateTitle(draftModifyRequest.title(), draftModifyRequest.problemId());
 
 		Problem problem = problemRepository.findByIdAndAuthorUsername(draftModifyRequest.problemId(), username)
 			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제입니다. - ID: " + draftModifyRequest.problemId()));
@@ -50,7 +50,7 @@ public class ProblemModifyService implements ProblemCreator {
 	}
 
 	@Override
-	@DistributedLock(key = "'makePublic'")
+	@DistributedLock(key = "'makePublic'", waitTime = 10, leaseTime = 5)
 	public void makePublic(Long problemId, String username) {
 		Problem problem = problemRepository.findByIdAndAuthorUsername(problemId, username)
 			.orElseThrow(() -> new NotFoundException("문제 제작자의 문제가 존재하지 않습니다 - ID:" + problemId));
@@ -63,8 +63,8 @@ public class ProblemModifyService implements ProblemCreator {
 		problemRepository.save(problem);
 	}
 
-	private void checkDuplicateTitle(String title) {
-		if (problemRepository.existsByTitle(title)) {
+	private void checkDuplicateTitle(String title, Long problemIdNotToContain) {
+		if (problemRepository.existsByTitleAndIdNot(title, problemIdNotToContain)) {
 			throw new DuplicateTitleException("이미 존재하는 제목입니다: " + title);
 		}
 	}

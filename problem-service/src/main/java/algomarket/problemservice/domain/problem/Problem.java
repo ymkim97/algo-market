@@ -80,7 +80,9 @@ public class Problem {
 	}
 
 	public void submit() {
-		submitCount += 1;
+		if (problemStatus == ProblemStatus.PUBLIC) {
+			submitCount += 1;
+		}
 	}
 
 	public void makePublic(Long problemNumber) {
@@ -101,6 +103,8 @@ public class Problem {
 		description = Objects.requireNonNull(modifyDraftRequest.description());
 		timeLimitSec = validateTimeLimit(modifyDraftRequest.timeLimitSec());
 		memoryLimitMb = validateMemoryLimit(modifyDraftRequest.memoryLimitMb());
+		exampleTestCases = modifyDraftRequest.exampleTestCases();
+		testCaseUrls = modifyDraftRequest.testCaseUrls();
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {

@@ -74,7 +74,7 @@ public class ProblemApi {
 	public ResponseEntity<ProblemInfoResponse> create(@RequestBody @Valid ProblemCreateRequest request, @CurrentUsername String username) {
 		ProblemInfoResponse response = problemCreator.create(request, username);
 
-		return ResponseEntity.created(URI.create("/problems/" + response.problemId()))
+		return ResponseEntity.created(URI.create("/problems/my/" + response.problemId()))
 			.body(response);
 	}
 

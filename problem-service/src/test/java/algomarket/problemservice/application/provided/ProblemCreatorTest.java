@@ -48,7 +48,7 @@ class ProblemCreatorTest {
 	void create() {
 		// given
 		var request = ProblemFixture.createProblemCreateRequest();
-		given(problemRepository.existsByTitle(request.title())).willReturn(false);
+		given(problemRepository.existsByTitleAndIdNot(request.title(), null)).willReturn(false);
 		given(problemRepository.save(any(Problem.class))).willAnswer(invocation -> invocation.getArgument(0));
 
 		// when
@@ -64,7 +64,7 @@ class ProblemCreatorTest {
 	void create_withDuplicateTitle_fail() {
 		// given
 		var request = ProblemFixture.createProblemCreateRequest("ABC", 1.5, 128);
-		given(problemRepository.existsByTitle(request.title())).willReturn(true);
+		given(problemRepository.existsByTitleAndIdNot(request.title(), null)).willReturn(true);
 
 		// when & then
 		assertThatThrownBy(() -> problemCreator.create(request, "username")).isInstanceOf(DuplicateTitleException.class);

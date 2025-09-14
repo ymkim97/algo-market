@@ -21,16 +21,16 @@ public interface ProblemRepository extends Repository<Problem, Long> {
 
 	Optional<Problem> findByIdAndAuthorUsername(Long id, String authorUsername);
 
-	@Query("SELECT new algomarket.problemservice.application.dto.ProblemListResponse(p.id, p.number, p.title, p.submitCount) FROM Problem p WHERE p.problemStatus = 'PUBLIC'")
+	@Query("SELECT new algomarket.problemservice.application.dto.ProblemListResponse(p.number, p.title, p.submitCount) FROM Problem p WHERE p.problemStatus = algomarket.problemservice.domain.problem.ProblemStatus.PUBLIC")
 	Page<ProblemListResponse> findAll(Pageable pageable);
 
 	@Query("SELECT new algomarket.problemservice.application.dto.MyProblemInfoResponse(p.id, p.number, p.title, p.description, p.submitCount, p.timeLimitSec, p.memoryLimitMb, p.problemStatus, p.exampleTestCases, p.testCaseUrls) FROM Problem p WHERE p.authorUsername = :authorUsername")
 	Page<MyProblemInfoResponse> findAllMyProblems(Pageable pageable, String authorUsername);
 
-	@Query("SELECT MAX(p.number) FROM Problem p WHERE p.problemStatus = 'PUBLIC'")
+	@Query("SELECT MAX(p.number) FROM Problem p WHERE p.problemStatus = algomarket.problemservice.domain.problem.ProblemStatus.PUBLIC")
 	Long findMaxProblemNumber();
 
-	boolean existsByTitle(String title);
+	boolean existsByTitleAndIdNot(String title, Long problemId);
 
 	boolean existsByIdAndAuthorUsername(Long problemId, String username);
 }

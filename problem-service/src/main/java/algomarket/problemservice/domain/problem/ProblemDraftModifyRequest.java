@@ -1,5 +1,7 @@
 package algomarket.problemservice.domain.problem;
 
+import java.util.List;
+
 import algomarket.problemservice.domain.shared.annotation.MemoryLimit;
 import algomarket.problemservice.domain.shared.annotation.TimeLimit;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +18,10 @@ public record ProblemDraftModifyRequest(
 
 	@NotNull @Positive @TimeLimit Double timeLimitSec,
 
-	@NotNull @Positive @MemoryLimit Integer memoryLimitMb
+	@NotNull @Positive @MemoryLimit Integer memoryLimitMb,
+
+	List<ExampleTestCase> exampleTestCases,
+
+	@NotNull @Size(min = 10, message = "문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.") List<TestCaseUrl> testCaseUrls
 ) {
 }
