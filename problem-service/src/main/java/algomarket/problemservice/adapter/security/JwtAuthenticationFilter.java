@@ -8,7 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,23 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtManager jwtManager;
-	private final AntPathMatcher pathMatcher =  new AntPathMatcher();
-
-	private final List<IgnoreRule> ignoreRules = List.of(
-		new IgnoreRule("POST", "/login"),
-		new IgnoreRule("POST", "/members"),
-		new IgnoreRule("GET", "/problems/{id:[0-9]+}"),
-		new IgnoreRule("OPTIONS", "/**") // CORS preflight
-	);
-
-	@Override
-	protected boolean shouldNotFilter(HttpServletRequest request) {
-		String requestUri = request.getRequestURI();
-		String method = request.getMethod();
-
-		return ignoreRules.stream()
-			.anyMatch(rule -> rule.method.equalsIgnoreCase(method) && pathMatcher.match(rule.pattern, requestUri));
-	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
