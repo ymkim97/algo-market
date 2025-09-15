@@ -70,7 +70,7 @@ const Login: React.FC = () => {
             to="/"
             className="text-2xl font-bold text-indigo-600 hover:text-indigo-500"
           >
-            Algo Market
+            AlgoMarket
           </Link>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

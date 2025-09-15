@@ -24,7 +24,7 @@ const Layout: React.FC = () => {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link to="/" className="text-xl font-bold text-indigo-600">
-                  Algo Market
+                  AlgoMarket
                 </Link>
               </div>
               {isAuthenticated && (
