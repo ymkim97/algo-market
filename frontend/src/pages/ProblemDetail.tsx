@@ -4,7 +4,6 @@ import { problemService } from '../services/problemService';
 // import { submissionService } from '../services/submissionService'; // TODO: 실제 API 연동시 사용
 import { useAsync } from '../hooks/useAsync';
 import { useToast } from '../hooks/useToast';
-import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -52,11 +51,10 @@ const ProblemDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <LoadingSkeleton type="card" className="mb-8" />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <LoadingSkeleton type="card" />
-          <LoadingSkeleton type="card" />
+      <div className="relative">
+        {/* 상단 로딩 바 */}
+        <div className="fixed top-0 left-0 w-full h-1 bg-red-500 z-50">
+          <div className="h-full bg-indigo-600 animate-pulse" />
         </div>
       </div>
     );
