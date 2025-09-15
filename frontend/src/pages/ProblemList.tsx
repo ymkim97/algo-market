@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-// import { problemService } from '../services/problemService'; // TODO: 실제 API 연동시 사용
+import { problemService } from '../services/problemService';
 import { useAsync } from '../hooks/useAsync';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
@@ -10,62 +10,44 @@ const ITEMS_PER_PAGE = 10;
 
 const ProblemList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0); // 백엔드 페이지는 0부터 시작
 
   const {
-    data: allProblems,
+    data: problemResponse,
     loading,
     error,
     execute: refetch,
   } = useAsync(
-    () => import('../data/mockData').then((m) => m.getMockProblems()),
-    [],
+    () => problemService.getProblems(currentPage, ITEMS_PER_PAGE),
+    [currentPage],
     { immediate: true }
   );
 
-  // 모든 태그 추출
-  const allTags = useMemo(() => {
-    if (!allProblems) return [];
-    const tags = new Set<string>();
-    allProblems.forEach((problem) => {
-      problem.tags?.forEach((tag) => tags.add(tag));
-    });
-    return Array.from(tags).sort();
-  }, [allProblems]);
+  // 현재 페이지의 문제들 및 페이지 정보
+  const totalPages = problemResponse?.page.totalPages || 0;
+  const totalElements = problemResponse?.page.totalElements || 0;
 
-  // 검색 및 필터링된 문제들
+  // 클라이언트 측 검색 필터링 (서버 검색 API가 없는 경우)
   const filteredProblems = useMemo(() => {
-    if (!allProblems) return [];
+    const problems = problemResponse?.content || [];
+    if (!searchQuery) return problems;
 
-    return allProblems.filter((problem) => {
-      const matchesSearch =
-        searchQuery === '' ||
-        problem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        problem.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return problems.filter((problem) =>
+      problem.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [problemResponse?.content, searchQuery]);
 
-      const matchesTag =
-        selectedTag === '' || problem.tags?.includes(selectedTag);
+  // 페이지 변경 핸들러
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page - 1); // UI에서는 1부터, 백엔드에서는 0부터
+  };
 
-      return matchesSearch && matchesTag;
-    });
-  }, [allProblems, searchQuery, selectedTag]);
-
-  // 페이지네이션된 문제들
-  const { problems, totalPages } = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-
-    return {
-      problems: filteredProblems.slice(startIndex, endIndex),
-      totalPages: Math.ceil(filteredProblems.length / ITEMS_PER_PAGE),
-    };
-  }, [filteredProblems, currentPage]);
-
-  // 검색이나 필터가 변경되면 첫 페이지로
+  // 검색이 변경되면 첫 페이지로
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedTag]);
+    if (currentPage !== 0) {
+      setCurrentPage(0);
+    }
+  }, [searchQuery, currentPage]);
 
   if (loading) {
     return (
@@ -89,7 +71,7 @@ const ProblemList: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">문제 목록</h1>
 
-      {/* 검색 및 필터 */}
+      {/* 검색 */}
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* 검색바 */}
@@ -115,37 +97,21 @@ const ProblemList: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="문제 제목이나 설명으로 검색..."
+                placeholder="문제 제목으로 검색..."
               />
             </div>
-          </div>
-
-          {/* 태그 필터 */}
-          <div className="sm:w-48">
-            <select
-              value={selectedTag}
-              onChange={(e) => setSelectedTag(e.target.value)}
-              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 rounded-md"
-            >
-              <option value="">모든 태그</option>
-              {allTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
         {/* 검색 결과 정보 */}
         <div className="text-sm text-gray-500">
-          총 {filteredProblems.length}개의 문제
-          {searchQuery && ` (검색: "${searchQuery}")`}
-          {selectedTag && ` (태그: "${selectedTag}")`}
-          {filteredProblems.length > ITEMS_PER_PAGE && (
+          총 {totalElements}개의 문제
+          {searchQuery &&
+            ` (검색: "${searchQuery}" - ${filteredProblems.length}개 결과)`}
+          {totalPages > 1 && (
             <span>
               {' '}
-              • 페이지 {currentPage}/{totalPages}
+              • 페이지 {currentPage + 1}/{totalPages}
             </span>
           )}
         </div>
@@ -153,48 +119,23 @@ const ProblemList: React.FC = () => {
 
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
-          {problems && problems.length > 0 ? (
-            problems.map((problem) => (
-              <li key={problem.id}>
+          {filteredProblems && filteredProblems.length > 0 ? (
+            filteredProblems.map((problem, index) => (
+              <li key={`${problem.problemNumber}-${index}`}>
                 <Link
-                  to={`/problems/${problem.id}`}
+                  to={`/problems/${problem.problemNumber}`}
                   className="block px-4 py-4 sm:px-6 hover:bg-gray-50"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <p className="text-sm font-medium text-indigo-600 truncate">
-                        {problem.id}. {problem.title}
+                        {problem.problemNumber}. {problem.title}
                       </p>
                     </div>
                     <div className="ml-2 flex-shrink-0 flex space-x-2">
-                      {problem.tags &&
-                        problem.tags.slice(0, 2).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
-                    <div className="sm:flex">
-                      <p className="flex items-center text-sm text-gray-500">
-                        시간 제한: {problem.timeLimit}초 | 메모리 제한:{' '}
-                        {problem.memoryLimit}MB
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                      <p>
-                        정답률:{' '}
-                        {problem.correctCount > 0
-                          ? Math.round(
-                              (problem.correctCount / problem.submitCount) * 100
-                            )
-                          : 0}
-                        % ({problem.correctCount}명 해결)
-                      </p>
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                        제출 {problem.submitCount}회
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -212,9 +153,9 @@ const ProblemList: React.FC = () => {
       {totalPages > 1 && (
         <div className="mt-6">
           <Pagination
-            currentPage={currentPage}
+            currentPage={currentPage + 1}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
           />
         </div>
       )}

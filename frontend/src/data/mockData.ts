@@ -1,6 +1,5 @@
-import { Problem } from '../types';
-
-export const mockProblems: Problem[] = [
+// Legacy mock data - no longer used
+export const mockProblems: any[] = [
   {
     id: 1,
     title: '두 수의 합',
@@ -573,7 +572,7 @@ N! = N × (N-1) × (N-2) × ... × 2 × 1이며, 0! = 1로 정의한다.
   },
 ];
 
-export const getMockProblems = (): Promise<Problem[]> => {
+export const getMockProblems = (): Promise<any[]> => {
   return new Promise((resolve) => {
     // API 호출을 시뮬레이션하기 위한 지연
     setTimeout(() => {
@@ -582,7 +581,7 @@ export const getMockProblems = (): Promise<Problem[]> => {
   });
 };
 
-export const getMockProblem = (id: number): Promise<Problem | null> => {
+export const getMockProblem = (id: number): Promise<any | null> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const problem = mockProblems.find((p) => p.id === id);

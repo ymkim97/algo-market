@@ -35,19 +35,36 @@ export interface SignupResponse {
 
 // Problem Types
 export interface Problem {
-  id: number;
+  problemId?: number; // 상세에서만 있음
+  problemNumber: number; // 문제 번호
   title: string;
-  description: string;
-  timeLimit: number;
-  memoryLimit: number;
+  description?: string; // 목록에서는 없고 상세에서만 있음
+  timeLimit?: number; // 상세에서만 있음 (float)
+  memoryLimit?: number; // 상세에서만 있음
   submitCount: number;
-  correctCount: number;
-  examples: Example[];
-  difficulty?: string;
-  tags?: string[];
-  isPublic: boolean;
+  exampleTestCases?: ExampleTestCase[]; // 상세에서만 있음
 }
 
+export interface ExampleTestCase {
+  input: string;
+  output: string;
+}
+
+// 페이지네이션을 위한 타입
+export interface PageResponse<T> {
+  content: T[];
+  page: {
+    size: number;
+    number: number;
+    totalElements: number;
+    totalPages: number;
+  };
+}
+
+// API 응답 타입
+export interface ProblemListResponse extends PageResponse<Problem> {}
+
+// 기존 Example 타입은 호환성을 위해 유지
 export interface Example {
   input: string;
   output: string;

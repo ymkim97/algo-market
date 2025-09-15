@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-// import { problemService } from '../services/problemService'; // TODO: 실제 API 연동시 사용
+import { problemService } from '../services/problemService';
 // import { submissionService } from '../services/submissionService'; // TODO: 실제 API 연동시 사용
 import { useAsync } from '../hooks/useAsync';
 import { useToast } from '../hooks/useToast';
@@ -21,10 +21,7 @@ const ProblemDetail: React.FC = () => {
     error,
     execute: refetch,
   } = useAsync(
-    () =>
-      import('../data/mockData').then((m) =>
-        m.getMockProblem(Number(problemId))
-      ),
+    () => problemService.getProblem(Number(problemId)),
     [problemId],
     { immediate: true }
   );
@@ -94,7 +91,7 @@ const ProblemDetail: React.FC = () => {
         {/* Problem Description */}
         <div className="bg-white shadow sm:rounded-lg p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            {problem.id}. {problem.title}
+            {problem.problemNumber}. {problem.title}
           </h1>
 
           <div className="mb-6">
@@ -104,20 +101,22 @@ const ProblemDetail: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              문제 설명
-            </h2>
-            <div
-              className="text-gray-700 prose prose-sm"
-              dangerouslySetInnerHTML={{ __html: problem.description }}
-            />
-          </div>
+          {problem.description && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                문제 설명
+              </h2>
+              <div
+                className="text-gray-700 prose prose-sm"
+                dangerouslySetInnerHTML={{ __html: problem.description }}
+              />
+            </div>
+          )}
 
-          {problem.examples && problem.examples.length > 0 && (
+          {problem.exampleTestCases && problem.exampleTestCases.length > 0 && (
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-2">예제</h2>
-              {problem.examples.map((example, index) => (
+              {problem.exampleTestCases.map((example, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-lg mb-4">
                   <div className="mb-2">
                     <strong>입력 {index + 1}:</strong>
@@ -131,14 +130,6 @@ const ProblemDetail: React.FC = () => {
                       {example.output}
                     </pre>
                   </div>
-                  {example.explanation && (
-                    <div>
-                      <strong>설명:</strong>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {example.explanation}
-                      </p>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
