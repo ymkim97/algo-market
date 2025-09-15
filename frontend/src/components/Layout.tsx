@@ -66,7 +66,7 @@ const Layout: React.FC = () => {
                     로그인
                   </Link>
                   <Link
-                    to="/register"
+                    to="/signup"
                     className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     회원가입

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { problemService } from '../services/problemService';
+// import { problemService } from '../services/problemService'; // TODO: 실제 API 연동시 사용
 import { useAsync } from '../hooks/useAsync';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';

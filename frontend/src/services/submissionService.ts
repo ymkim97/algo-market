@@ -1,4 +1,4 @@
-import { Submission, ProgressEvent, ApiResponse } from '../types';
+import { Submission, ApiResponse } from '../types';
 import api from './api';
 
 export const submissionService = {

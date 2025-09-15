@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { problemService } from '../services/problemService';
-import { submissionService } from '../services/submissionService';
+// import { problemService } from '../services/problemService'; // TODO: 실제 API 연동시 사용
+// import { submissionService } from '../services/submissionService'; // TODO: 실제 API 연동시 사용
 import { useAsync } from '../hooks/useAsync';
 import { useToast } from '../hooks/useToast';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -37,11 +37,13 @@ const ProblemDetail: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const submission = await submissionService.submitCode(
-        Number(problemId),
-        code,
-        language
-      );
+      // const submission = await submissionService.submitCode(
+      //   Number(problemId),
+      //   code,
+      //   language
+      // );
+      // TODO: 실제 API 연동시 사용
+      console.log('Submit code:', { problemId, code, language });
       toast.success('코드가 제출되었습니다!');
       // TODO: Navigate to submission progress page
     } catch (error: any) {
