@@ -14,7 +14,8 @@ export function useToast() {
     const id = Math.random().toString(36).substr(2, 9);
     const newToast = { ...toast, id };
 
-    setToasts((prev) => [...prev, newToast]);
+    // 기존 토스트들을 모두 제거하고 새로운 토스트만 표시
+    setToasts([newToast]);
   }, []);
 
   const removeToast = useCallback((id: string) => {
