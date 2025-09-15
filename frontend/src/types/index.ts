@@ -22,6 +22,17 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface SignupRequest {
+  username: string;
+  password: string;
+  email?: string;
+}
+
+export interface SignupResponse {
+  message: string;
+  success: boolean;
+}
+
 // Problem Types
 export interface Problem {
   id: number;

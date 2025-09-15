@@ -1,4 +1,10 @@
-import { LoginRequest, LoginResponse, User } from '../types';
+import {
+  LoginRequest,
+  LoginResponse,
+  SignupRequest,
+  SignupResponse,
+  User,
+} from '../types';
 import api from './api';
 
 export const authService = {
@@ -34,6 +40,13 @@ export const authService = {
 
     console.log('No valid auth header found');
     throw new Error('로그인에 실패했습니다.');
+  },
+
+  // Signup
+  signup: async (signupData: SignupRequest): Promise<SignupResponse> => {
+    const response = await api.post('/members', signupData);
+    // @ts-ignore
+    return response.data;
   },
 
   // Logout

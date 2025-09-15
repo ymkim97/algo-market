@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { authService } from '../services/authService';
 import { useToastContext } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -70,15 +71,14 @@ const Signup: React.FC = () => {
     setLoading(true);
 
     try {
-      // TODO: 백엔드 연동시 authService.signup 구현 예정
-      console.log('Signup form data:', {
+      const signupData = {
         username: formData.username,
-        email: formData.email,
         password: formData.password,
-      });
+        ...(formData.email &&
+          formData.email.trim() && { email: formData.email }),
+      };
 
-      // 임시로 성공 메시지 표시
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // 로딩 시뮬레이션
+      await authService.signup(signupData);
       toast.success('회원가입이 완료되었습니다! 로그인해주세요.');
       navigate('/login');
     } catch (error: any) {

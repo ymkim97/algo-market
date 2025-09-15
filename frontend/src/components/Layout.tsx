@@ -12,7 +12,7 @@ const Layout: React.FC = () => {
   const handleLogout = () => {
     authService.logout();
     toast.success('로그아웃되었습니다.');
-    navigate('/login');
+    navigate('/');
   };
 
   return (
