@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { problemService } from '../services/problemService';
-import { useAsync } from '../hooks/useAsync';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import Pagination from '../components/Pagination';
@@ -12,16 +11,31 @@ const ProblemList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0); // 백엔드 페이지는 0부터 시작
 
-  const {
-    data: problemResponse,
-    loading,
-    error,
-    execute: refetch,
-  } = useAsync(
-    () => problemService.getProblems(currentPage, ITEMS_PER_PAGE),
-    [currentPage],
-    { immediate: true }
+  const [problemResponse, setProblemResponse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchProblems = React.useCallback(
+    async (page = currentPage) => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('API call with page:', page);
+        const data = await problemService.getProblems(page, ITEMS_PER_PAGE);
+        setProblemResponse(data);
+      } catch (err: any) {
+        setError(err.message || '문제 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage]
   );
+
+  // 페이지 변경 시 데이터 로드
+  React.useEffect(() => {
+    fetchProblems(currentPage);
+  }, [currentPage, fetchProblems]);
 
   // 현재 페이지의 문제들 및 페이지 정보
   const totalPages = problemResponse?.page.totalPages || 0;
@@ -32,13 +46,14 @@ const ProblemList: React.FC = () => {
     const problems = problemResponse?.content || [];
     if (!searchQuery) return problems;
 
-    return problems.filter((problem) =>
+    return problems.filter((problem: any) =>
       problem.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [problemResponse?.content, searchQuery]);
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
+    console.log('Page change requested:', page, '-> backend page:', page - 1);
     setCurrentPage(page - 1); // UI에서는 1부터, 백엔드에서는 0부터
   };
 
@@ -47,7 +62,7 @@ const ProblemList: React.FC = () => {
     if (currentPage !== 0) {
       setCurrentPage(0);
     }
-  }, [searchQuery, currentPage]);
+  }, [searchQuery]);
 
   if (loading) {
     return (
@@ -62,7 +77,10 @@ const ProblemList: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">문제 목록</h1>
-        <ErrorMessage message={error} onRetry={refetch} />
+        <ErrorMessage
+          message={error}
+          onRetry={() => fetchProblems(currentPage)}
+        />
       </div>
     );
   }
@@ -120,7 +138,7 @@ const ProblemList: React.FC = () => {
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
           {filteredProblems && filteredProblems.length > 0 ? (
-            filteredProblems.map((problem, index) => (
+            filteredProblems.map((problem: any, index: number) => (
               <li key={`${problem.problemNumber}-${index}`}>
                 <Link
                   to={`/problems/${problem.problemNumber}`}
@@ -150,11 +168,11 @@ const ProblemList: React.FC = () => {
       </div>
 
       {/* 페이지네이션 */}
-      {totalPages > 1 && (
+      {totalElements > 0 && (
         <div className="mt-6">
           <Pagination
             currentPage={currentPage + 1}
-            totalPages={totalPages}
+            totalPages={Math.max(totalPages, 1)}
             onPageChange={handlePageChange}
           />
         </div>

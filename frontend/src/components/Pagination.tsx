@@ -13,7 +13,7 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   className = '',
 }) => {
-  if (totalPages <= 1) return null;
+  if (totalPages < 1) return null;
 
   const getPageNumbers = () => {
     const delta = 2;
@@ -39,7 +39,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
     if (currentPage + delta < totalPages - 1) {
       rangeWithDots.push('...', totalPages);
-    } else {
+    } else if (totalPages > 1) {
       rangeWithDots.push(totalPages);
     }
 
