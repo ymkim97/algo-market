@@ -7,13 +7,79 @@ import { useToastContext } from '../context/ToastContext';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProgressBar from '../components/ProgressBar';
+import Editor from '@monaco-editor/react';
 
 const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
-  const [code, setCode] = useState('');
   const [language, setLanguage] = useState('java');
   const [submitting, setSubmitting] = useState(false);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(50); // 기본 50%
+  const [isResizing, setIsResizing] = useState(false);
   const toast = useToastContext();
+
+  // 언어별 기본 코드 템플릿
+  const defaultCode = {
+    java: `import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        // 여기에 코드를 작성하세요
+    }
+}`,
+    python: `def main():
+    # 여기에 코드를 작성하세요
+
+if __name__ == "__main__":
+    main()`,
+  };
+
+  const [code, setCode] = useState(defaultCode.java);
+
+  // 언어 변경 시 기본 코드도 변경
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    setCode(defaultCode[newLanguage as keyof typeof defaultCode]);
+  };
+
+  // 패널 리사이즈 핸들러
+  const handleMouseDown = () => {
+    setIsResizing(true);
+  };
+
+  const handleMouseMove = React.useCallback(
+    (e: MouseEvent) => {
+      if (!isResizing) return;
+      e.preventDefault();
+
+      const containerWidth = window.innerWidth;
+      const newWidth = ((e.clientX - 32) / (containerWidth - 64)) * 100; // 32px는 패딩
+
+      if (newWidth >= 20 && newWidth <= 80) {
+        setLeftPanelWidth(newWidth);
+      }
+    },
+    [isResizing]
+  );
+
+  const handleMouseUp = () => {
+    setIsResizing(false);
+  };
+
+  React.useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -102,9 +168,12 @@ const ProblemDetail: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="flex h-[calc(100vh-8rem)] gap-1">
         {/* Problem Description */}
-        <div className="bg-white shadow sm:rounded-lg p-6">
+        <div
+          className="bg-white shadow sm:rounded-lg p-6 overflow-y-auto"
+          style={{ width: `${leftPanelWidth}%`, overflowX: 'scroll' }}
+        >
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
             {problem.problemNumber}. {problem.title}
           </h1>
@@ -192,33 +261,89 @@ const ProblemDetail: React.FC = () => {
           )}
         </div>
 
+        {/* Resize Handle */}
+        <div
+          className={`w-1 bg-gray-300 hover:bg-gray-400 cursor-col-resize flex items-center justify-center ${
+            isResizing ? 'bg-indigo-500' : ''
+          }`}
+          onMouseDown={handleMouseDown}
+        >
+          <div className="w-0.5 h-8 bg-white rounded opacity-50"></div>
+        </div>
+
         {/* Code Editor */}
-        <div className="bg-white shadow sm:rounded-lg p-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              언어 선택
+        <div
+          className="bg-white shadow sm:rounded-lg p-6 flex flex-col"
+          style={{ width: `${100 - leftPanelWidth}%`, overflowX: 'scroll' }}
+        >
+          <div className="mb-6">
+            <label className="block text-lg font-semibold text-gray-900 mb-3">
+              💻 언어 선택
             </label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            >
-              <option value="java">Java</option>
-              <option value="python">Python</option>
-            </select>
+            <div className="flex space-x-3">
+              {[
+                {
+                  value: 'java',
+                  label: 'Java 21',
+                  iconPath: '/java_logo_icon.png',
+                },
+                {
+                  value: 'python',
+                  label: 'Python 3',
+                  iconPath: '/python_logo_icon.png',
+                },
+              ].map((lang) => (
+                <button
+                  key={lang.value}
+                  onClick={() => handleLanguageChange(lang.value)}
+                  className={`flex items-center px-4 py-2 rounded-lg border-2 transition-all duration-200 ${
+                    language === lang.value
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  <img
+                    src={lang.iconPath}
+                    alt={`${lang.label} icon`}
+                    className="w-6 h-6 mr-2"
+                  />
+                  <span className="font-medium">{lang.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              코드 작성
+          <div className="flex-1 flex flex-col mb-4">
+            <label className="block text-lg font-semibold text-gray-900 mb-3">
+              📝 코드 작성
             </label>
-            <textarea
-              rows={15}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono"
-              placeholder="여기에 코드를 작성하세요..."
-            />
+            <div className="flex-1 border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+              <Editor
+                height="100%"
+                language={language === 'java' ? 'java' : 'python'}
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                theme="vs-dark"
+                loading={
+                  <div className="flex items-center justify-center h-96 bg-gray-900 text-white">
+                    <LoadingSpinner size="md" className="mr-2" />
+                    에디터 로딩 중...
+                  </div>
+                }
+                options={{
+                  fontSize: 14,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  lineNumbers: 'on',
+                  folding: true,
+                  selectOnLineNumbers: true,
+                  automaticLayout: true,
+                  tabSize: 4,
+                  insertSpaces: true,
+                }}
+              />
+            </div>
           </div>
 
           <button
