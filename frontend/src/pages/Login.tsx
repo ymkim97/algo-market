@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
 import { useToastContext } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ProgressBar from '../components/ProgressBar';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -64,6 +65,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <ProgressBar loading={loading} />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <Link

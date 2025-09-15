@@ -6,6 +6,7 @@ import { useAsync } from '../hooks/useAsync';
 import { useToast } from '../hooks/useToast';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ProgressBar from '../components/ProgressBar';
 
 const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
@@ -52,9 +53,9 @@ const ProblemDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="relative">
-        {/* 상단 로딩 바 */}
-        <div className="fixed top-0 left-0 w-full h-1 bg-red-500 z-50">
-          <div className="h-full bg-indigo-600 animate-pulse" />
+        <ProgressBar loading={loading} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center text-gray-500">문제를 불러오는 중...</div>
         </div>
       </div>
     );

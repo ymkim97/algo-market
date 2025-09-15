@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { problemService } from '../services/problemService';
 import ErrorMessage from '../components/ErrorMessage';
 import Pagination from '../components/Pagination';
+import ProgressBar from '../components/ProgressBar';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -89,11 +90,7 @@ const ProblemList: React.FC = () => {
   return (
     <div className="relative">
       {/* 상단 로딩 바 */}
-      {loading && (
-        <div className="fixed top-0 left-0 w-full h-1 bg-red-500 z-50">
-          <div className="h-full bg-indigo-600 animate-pulse" />
-        </div>
-      )}
+      <ProgressBar loading={loading} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">문제 목록</h1>
