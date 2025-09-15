@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { problemService } from '../services/problemService';
 // import { submissionService } from '../services/submissionService'; // TODO: 실제 API 연동시 사용
 import { useAsync } from '../hooks/useAsync';
-import { useToast } from '../hooks/useToast';
+import { useToastContext } from '../context/ToastContext';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProgressBar from '../components/ProgressBar';
@@ -13,7 +13,23 @@ const ProblemDetail: React.FC = () => {
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('java');
   const [submitting, setSubmitting] = useState(false);
-  const toast = useToast();
+  const toast = useToastContext();
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('클립보드에 복사되었습니다!');
+    } catch (error) {
+      // fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toast.success('클립보드에 복사되었습니다!');
+    }
+  };
 
   const {
     data: problem,
@@ -113,21 +129,62 @@ const ProblemDetail: React.FC = () => {
           )}
 
           {problem.exampleTestCases && problem.exampleTestCases.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">예제</h2>
+            <div className="mt-8">
               {problem.exampleTestCases.map((example, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <div className="mb-2">
-                    <strong>입력 {index + 1}:</strong>
-                    <pre className="mt-1 text-sm whitespace-pre-wrap">
-                      {example.input}
-                    </pre>
-                  </div>
-                  <div className="mb-2">
-                    <strong>출력 {index + 1}:</strong>
-                    <pre className="mt-1 text-sm whitespace-pre-wrap">
-                      {example.output}
-                    </pre>
+                <div
+                  key={index}
+                  className="bg-white border border-gray-200 shadow-sm rounded-lg p-6 mb-6"
+                >
+                  <h3 className="text-lg font-semibold text-indigo-700 mb-4">
+                    예제 {index + 1}
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          입력
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(example.input)}
+                          className="inline-flex items-center px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                          title="클립보드에 복사"
+                        >
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          복사
+                        </button>
+                      </div>
+                      <div className="bg-gray-900 text-green-400 p-4 rounded-md font-mono text-sm">
+                        <pre className="whitespace-pre-wrap">
+                          {example.input}
+                        </pre>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          출력
+                        </span>
+                      </div>
+                      <div className="bg-gray-900 text-green-400 p-4 rounded-md font-mono text-sm">
+                        <pre className="whitespace-pre-wrap">
+                          {example.output}
+                        </pre>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
