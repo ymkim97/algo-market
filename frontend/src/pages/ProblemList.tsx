@@ -61,10 +61,8 @@ const ProblemList: React.FC = () => {
 
   // 검색이 변경되면 첫 페이지로
   React.useEffect(() => {
-    if (currentPage !== 0) {
-      setCurrentPage(0);
-    }
-  }, [currentPage, searchQuery]);
+    setCurrentPage(0);
+  }, [searchQuery]);
 
   if (error) {
     return (
