@@ -31,7 +31,7 @@ public class Problem {
 	@Column(nullable = true, unique = true)
 	private Long number;
 
-	@Column(nullable = false,  unique = true, length = 100)
+	@Column(nullable = true,  unique = true, length = 100)
 	private String title;
 
 	@Column(nullable = false,  length = 30)
@@ -64,7 +64,7 @@ public class Problem {
 	public static Problem create(ProblemCreateRequest createRequest, String authorUsername) {
 		Problem problem = new Problem();
 
-		problem.title = Objects.requireNonNull(createRequest.title());
+		problem.title = createRequest.title();
 		problem.authorUsername = Objects.requireNonNull(authorUsername);
 		problem.description = Objects.requireNonNull(createRequest.description());
 		problem.timeLimitSec = validateTimeLimit(createRequest.timeLimitSec());
@@ -88,6 +88,18 @@ public class Problem {
 	public void makePublic(Long problemNumber) {
 		if (problemStatus == ProblemStatus.PUBLIC) {
 			throw new IllegalStateException("이미 공개된 문제입니다.");
+		}
+
+		if (title.isBlank() || title.length() > 100) {
+			throw new IllegalStateException("문제 제목은 1자 이상, 100자 이하이어야 합니다.");
+		}
+
+		if (description.isBlank()) {
+			throw new IllegalStateException("문제 설명을 입력해주세요.");
+		}
+
+		if (testCaseUrls.size() < 10) {
+			throw new IllegalStateException("문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.");
 		}
 
 		problemStatus = ProblemStatus.PUBLIC;

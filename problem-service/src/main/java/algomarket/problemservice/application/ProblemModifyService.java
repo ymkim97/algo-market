@@ -64,7 +64,7 @@ public class ProblemModifyService implements ProblemCreator {
 	}
 
 	private void checkDuplicateTitle(String title, Long problemIdNotToContain) {
-		if (problemRepository.existsByTitleAndIdNot(title, problemIdNotToContain)) {
+		if (title != null && problemRepository.existsByTitleAndIdNot(title, problemIdNotToContain)) {
 			throw new DuplicateTitleException("이미 존재하는 제목입니다: " + title);
 		}
 	}

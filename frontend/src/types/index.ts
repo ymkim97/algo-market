@@ -50,8 +50,18 @@ export interface Problem {
 export type ProblemStatus = 'DRAFT' | 'PUBLIC';
 
 export interface TestCaseUrl {
-  id: number;
+  id?: number;
   url: string;
+}
+
+// 문제 생성 요청 타입
+export interface ProblemCreateRequest {
+  title: string;
+  description: string;
+  timeLimitSec: number;
+  memoryLimitMb: number;
+  exampleTestCases: ExampleTestCase[];
+  testCaseUrls: TestCaseUrl[];
 }
 
 export interface ExampleTestCase {

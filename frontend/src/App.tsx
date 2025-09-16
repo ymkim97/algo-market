@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import ProblemList from './pages/ProblemList';
 import ProblemDetail from './pages/ProblemDetail';
 import CreateProblem from './pages/CreateProblem';
+import ProblemCreate from './pages/ProblemCreate';
 
 function App() {
   return (
@@ -25,6 +26,11 @@ function App() {
             <Route path="problems" element={<ProblemList />} />
             <Route path="problems/:problemId" element={<ProblemDetail />} />
             <Route path="create-problem" element={<CreateProblem />} />
+            <Route path="create-problem/new" element={<ProblemCreate />} />
+            <Route
+              path="create-problem/edit/:problemId"
+              element={<ProblemCreate />}
+            />
           </Route>
         </Routes>
       </Router>
