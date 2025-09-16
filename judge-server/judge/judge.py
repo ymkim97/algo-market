@@ -51,7 +51,7 @@ def run(source_code_path: str, language: str, time_limit_sec: int, memory_limit_
 
     result, max_duration, max_memory = _evaluate_code(username, source_code_path, language, time_limit_sec, memory_limit_mb, input_test_data, output_test_data, submission_id)
 
-    progress_publisher.publish_judging_completed(submission_id, username, result)
+    progress_publisher.publish_judging_completed(submission_id, username, result, max_duration, max_memory)
 
     return result, max_duration, max_memory
 

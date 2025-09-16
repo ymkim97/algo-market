@@ -82,7 +82,9 @@ class SseProgressAdapterTest {
 			50,
 			5,
 			10,
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			null,
+			null
 		);
 
 		// when
@@ -130,7 +132,9 @@ class SseProgressAdapterTest {
 			50,
 			5,
 			10,
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			null,
+			null
 		);
 
 		// when

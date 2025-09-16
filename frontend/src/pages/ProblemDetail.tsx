@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { problemService } from '../services/problemService';
-// import { submissionService } from '../services/submissionService'; // TODO: 실제 API 연동시 사용
+import { submissionService } from '../services/submissionService';
 import { useAsync } from '../hooks/useAsync';
 import { useToastContext } from '../context/ToastContext';
+import {
+  SubmitResponse,
+  SubmissionStatus,
+  ProgressEvent,
+  CompletedEvent,
+} from '../types';
 import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProgressBar from '../components/ProgressBar';
@@ -48,6 +54,13 @@ if __name__ == "__main__":
   );
 
   const [submitting, setSubmitting] = useState(false);
+  const [lastSubmission, setLastSubmission] = useState<SubmitResponse | null>(
+    null
+  );
+  const [progressEvent, setProgressEvent] = useState<ProgressEvent | null>(
+    null
+  );
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const [leftPanelWidth, setLeftPanelWidth] = useState(() => {
     const saved = localStorage.getItem('problem-detail-left-panel-width');
     return saved ? parseFloat(saved) : 50;
@@ -62,6 +75,82 @@ if __name__ == "__main__":
 
   const code = codeByLanguage[language];
 
+  // 제출 상태별 스타일 및 텍스트
+  const getStatusDisplay = (status: SubmissionStatus) => {
+    switch (status) {
+      case 'PENDING':
+        return {
+          text: '대기 중',
+          bgColor: 'bg-gray-100',
+          textColor: 'text-gray-800',
+          icon: '⏳',
+        };
+      case 'JUDGING':
+        return {
+          text: '채점 중',
+          bgColor: 'bg-blue-100',
+          textColor: 'text-blue-800',
+          icon: 'spinner',
+        };
+      case 'ACCEPTED':
+        return {
+          text: '정답',
+          bgColor: 'bg-green-100',
+          textColor: 'text-green-800',
+          icon: '✅',
+        };
+      case 'WRONG_ANSWER':
+        return {
+          text: '틀렸습니다',
+          bgColor: 'bg-red-100',
+          textColor: 'text-red-800',
+          icon: '❌',
+        };
+      case 'TIME_LIMIT_EXCEEDED':
+        return {
+          text: '시간 초과',
+          bgColor: 'bg-yellow-100',
+          textColor: 'text-yellow-800',
+          icon: '⏰',
+        };
+      case 'MEMORY_LIMIT_EXCEEDED':
+        return {
+          text: '메모리 초과',
+          bgColor: 'bg-orange-100',
+          textColor: 'text-orange-800',
+          icon: '💾',
+        };
+      case 'RUNTIME_ERROR':
+        return {
+          text: '런타임 에러',
+          bgColor: 'bg-purple-100',
+          textColor: 'text-purple-800',
+          icon: '🚫',
+        };
+      case 'COMPILE_ERROR':
+        return {
+          text: '컴파일 에러',
+          bgColor: 'bg-pink-100',
+          textColor: 'text-pink-800',
+          icon: '🔧',
+        };
+      case 'SERVER_ERROR':
+        return {
+          text: '서버 에러',
+          bgColor: 'bg-gray-100',
+          textColor: 'text-gray-800',
+          icon: '⚠️',
+        };
+      default:
+        return {
+          text: '알 수 없음',
+          bgColor: 'bg-gray-100',
+          textColor: 'text-gray-800',
+          icon: '❓',
+        };
+    }
+  };
+
   // 코드 변경 핸들러
   const handleCodeChange = (newCode: string) => {
     const newCodeByLanguage = { ...codeByLanguage, [language]: newCode };
@@ -74,6 +163,126 @@ if __name__ == "__main__":
     setLanguage(newLanguage);
     localStorage.setItem(getStorageKey('language'), newLanguage);
   };
+
+  // SSE 연결 시작
+  const startProgressEventSource = (submissionId: number) => {
+    // 기존 연결이 있으면 닫기
+    if (eventSource) {
+      eventSource.close();
+    }
+
+    const newEventSource =
+      submissionService.createProgressEventSource(submissionId);
+
+    newEventSource.onopen = (event) => {
+      console.log('SSE connection opened:', event);
+    };
+
+    // 커스텀 이벤트명 'progress'로 리스닝
+    newEventSource.addEventListener('progress', (event: any) => {
+      try {
+        console.log('SSE Raw data:', event.data);
+        const progress: ProgressEvent = JSON.parse(event.data);
+        console.log('SSE Parsed progress:', progress);
+        setProgressEvent(progress);
+
+        // 진행 중에도 성능 정보가 있으면 업데이트
+        if (
+          progress.runtimeMs !== undefined ||
+          progress.memoryKb !== undefined
+        ) {
+          setLastSubmission((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  runtimeMs: progress.runtimeMs ?? prev.runtimeMs,
+                  memoryKb: progress.memoryKb ?? prev.memoryKb,
+                }
+              : null
+          );
+        }
+
+        // 채점이 완료되면 submission 상태도 업데이트 (성능 정보 포함)
+        if (
+          progress.submitStatus !== 'PENDING' &&
+          progress.submitStatus !== 'JUDGING'
+        ) {
+          console.log('Updating submission status to:', progress.submitStatus);
+          setLastSubmission((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  submitStatus: progress.submitStatus,
+                  // 성능 정보 업데이트 (있으면 업데이트, 없으면 기존 값 유지)
+                  runtimeMs: progress.runtimeMs ?? prev.runtimeMs,
+                  memoryKb: progress.memoryKb ?? prev.memoryKb,
+                }
+              : null
+          );
+
+          // progress 이벤트로 완료된 경우는 연결을 유지하여 completed 이벤트를 기다림
+          // 단, 에러 상태인 경우에만 연결 종료
+          if (
+            ['COMPILE_ERROR', 'RUNTIME_ERROR', 'SERVER_ERROR'].includes(
+              progress.submitStatus
+            )
+          ) {
+            newEventSource.close();
+            setEventSource(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing SSE data:', error);
+      }
+    });
+
+    // 완료 이벤트 리스닝
+    newEventSource.addEventListener('completed', (event: any) => {
+      try {
+        console.log('SSE Completed data:', event.data);
+        const completed: CompletedEvent = JSON.parse(event.data);
+        console.log('SSE Parsed completed:', completed);
+
+        // 최종 결과로 submission 상태 업데이트 (성능 정보는 그대로 유지)
+        setLastSubmission((prev) =>
+          prev
+            ? {
+                ...prev,
+                submitStatus: completed.finalStatus,
+                // 성능 정보는 그대로 유지
+                runtimeMs: prev.runtimeMs,
+                memoryKb: prev.memoryKb,
+              }
+            : null
+        );
+
+        // 연결 종료
+        newEventSource.close();
+        setEventSource(null);
+      } catch (error) {
+        console.error('Error parsing completed SSE data:', error);
+      }
+    });
+
+    newEventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      console.log('EventSource readyState:', newEventSource.readyState);
+      console.log('EventSource URL:', newEventSource.url);
+      newEventSource.close();
+      setEventSource(null);
+    };
+
+    setEventSource(newEventSource);
+  };
+
+  // 컴포넌트 언마운트 시 SSE 연결 정리
+  React.useEffect(() => {
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [eventSource]);
 
   // 수평 패널 리사이즈 핸들러
   const handleMouseDown = () => {
@@ -198,15 +407,23 @@ if __name__ == "__main__":
 
     setSubmitting(true);
     try {
-      // const submission = await submissionService.submitCode(
-      //   Number(problemId),
-      //   code,
-      //   language
-      // );
-      // TODO: 실제 API 연동시 사용
-      console.log('Submit code:', { problemId, code, language });
+      const submission = await submissionService.submitCode(
+        Number(problemId),
+        code,
+        language.toUpperCase()
+      );
+      setLastSubmission(submission);
+      setProgressEvent(null); // 이전 진행률 초기화
+
+      // SSE 연결 시작 (PENDING이나 JUDGING 상태일 때만)
+      if (
+        submission.submitStatus === 'PENDING' ||
+        submission.submitStatus === 'JUDGING'
+      ) {
+        startProgressEventSource(submission.submissionId);
+      }
+
       toast.success('코드가 제출되었습니다!');
-      // TODO: Navigate to submission progress page
     } catch (error: any) {
       toast.error(error.message || '코드 제출 중 오류가 발생했습니다.');
     } finally {
@@ -411,7 +628,6 @@ if __name__ == "__main__":
                   fontSize: 14,
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,
-                  wordWrap: 'on',
                   lineNumbers: 'on',
                   folding: true,
                   selectOnLineNumbers: true,
@@ -441,9 +657,114 @@ if __name__ == "__main__":
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900">결과</h3>
             </div>
-            <div className="text-gray-500 text-center py-8">
-              코드를 제출하면 여기에 결과가 표시됩니다.
-            </div>
+
+            {lastSubmission ? (
+              <div className="space-y-4">
+                {/* 제출 기본 정보 */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                        제출 정보
+                      </h4>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">제출 ID:</span> #
+                          {lastSubmission.submissionId}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">제출자:</span>{' '}
+                          {lastSubmission.username}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">제출 시간:</span>{' '}
+                          {new Date(lastSubmission.submitTime).toLocaleString(
+                            'ko-KR'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                        채점 결과
+                      </h4>
+                      <div className="space-y-2">
+                        {(() => {
+                          const statusDisplay = getStatusDisplay(
+                            lastSubmission.submitStatus
+                          );
+                          return (
+                            <div className="flex items-center space-x-2">
+                              {statusDisplay.icon === 'spinner' ? (
+                                <LoadingSpinner size="sm" />
+                              ) : (
+                                <span className="text-lg">
+                                  {statusDisplay.icon}
+                                </span>
+                              )}
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.bgColor} ${statusDisplay.textColor}`}
+                              >
+                                {statusDisplay.text}
+                                {lastSubmission.submitStatus === 'JUDGING' &&
+                                  progressEvent && (
+                                    <span className="ml-1">
+                                      {progressEvent.progressPercent}%
+                                    </span>
+                                  )}
+                                {lastSubmission.submitStatus === 'PENDING' &&
+                                  progressEvent && (
+                                    <span className="ml-1">
+                                      {progressEvent.progressPercent}%
+                                    </span>
+                                  )}
+                              </span>
+                            </div>
+                          );
+                        })()}
+
+                        {lastSubmission.runtimeMs !== undefined && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">실행 시간:</span>{' '}
+                            {lastSubmission.runtimeMs}ms
+                          </p>
+                        )}
+
+                        {lastSubmission.memoryKb !== undefined && (
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">메모리 사용량:</span>{' '}
+                            {lastSubmission.memoryKb}KB
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 에러 상태일 때 추가 정보 */}
+                {(
+                  ['COMPILE_ERROR', 'RUNTIME_ERROR'] as SubmissionStatus[]
+                ).includes(lastSubmission.submitStatus) && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h5 className="text-sm font-medium text-red-700 mb-2">
+                      {lastSubmission.submitStatus === 'COMPILE_ERROR'
+                        ? '컴파일 오류'
+                        : '런타임 오류'}
+                    </h5>
+                    <p className="text-sm text-red-600">
+                      {lastSubmission.submitStatus === 'COMPILE_ERROR'
+                        ? '코드를 컴파일하는 중에 오류가 발생했습니다. 문법을 다시 확인해보세요.'
+                        : '코드 실행 중에 오류가 발생했습니다. 런타임 에러를 확인해보세요.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-gray-500 text-center py-8">
+                코드를 제출하면 여기에 결과가 표시됩니다.
+              </div>
+            )}
           </div>
         </div>
       </div>

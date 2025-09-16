@@ -70,7 +70,9 @@ class RedisProgressSubscriberTest {
 			50,
 			5,
 			10,
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			null,
+			null
 		);
 
 		String eventJson = objectMapper.writeValueAsString(testEvent);
@@ -120,7 +122,9 @@ class RedisProgressSubscriberTest {
 			50,
 			5,
 			10,
-			LocalDateTime.now()
+			LocalDateTime.now(),
+			null,
+			null
 		);
 
 		String eventJson = objectMapper.writeValueAsString(testEvent);

@@ -84,6 +84,16 @@ export interface Submission {
   memoryUsage?: number;
 }
 
+export interface SubmitResponse {
+  submissionId: number;
+  problemId: number;
+  username: string;
+  submitStatus: SubmissionStatus;
+  runtimeMs?: number;
+  memoryKb?: number;
+  submitTime: string;
+}
+
 export type SubmissionStatus =
   | 'PENDING'
   | 'JUDGING'
@@ -92,7 +102,8 @@ export type SubmissionStatus =
   | 'TIME_LIMIT_EXCEEDED'
   | 'MEMORY_LIMIT_EXCEEDED'
   | 'RUNTIME_ERROR'
-  | 'COMPILE_ERROR';
+  | 'COMPILE_ERROR'
+  | 'SERVER_ERROR';
 
 // Progress Types
 export interface ProgressEvent {
@@ -101,6 +112,15 @@ export interface ProgressEvent {
   submitStatus: SubmissionStatus;
   progressPercent: number;
   currentTest: number;
-  totalTests: number;
-  timestamp: string;
+  totalTest: number;
+  timeStamp: string;
+  runtimeMs?: number;
+  memoryKb?: number;
+}
+
+export interface CompletedEvent {
+  submissionId: number;
+  username: string;
+  finalStatus: SubmissionStatus;
+  timeStamp: string;
 }

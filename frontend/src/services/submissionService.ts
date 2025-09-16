@@ -1,19 +1,19 @@
-import { Submission, ApiResponse } from '../types';
+import { ApiResponse, Submission, SubmitResponse } from '../types';
 import api from './api';
 
 export const submissionService = {
   // Submit code
   submitCode: async (
     problemId: number,
-    code: string,
+    sourceCode: string,
     language: string
-  ): Promise<Submission> => {
-    const response = await api.post<ApiResponse<Submission>>('/submissions', {
+  ): Promise<SubmitResponse> => {
+    const response = await api.post<SubmitResponse>('/submissions', {
       problemId,
-      code,
+      sourceCode,
       language,
     });
-    return response.data;
+    return response;
   },
 
   // Get submission by id
@@ -47,15 +47,13 @@ export const submissionService = {
     return response.data;
   },
 
-  // Create SSE connection for real-time progress
+  // Create an SSE connection for real-time progress
   createProgressEventSource: (submissionId: number): EventSource => {
-    const token = localStorage.getItem('token');
-    const url = `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api'}/submissions/${submissionId}/progress`;
+    const user = localStorage.getItem('user');
+    const username = user ? JSON.parse(user).username : '';
+    const url = `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080'}/submissions/${submissionId}/progress?username=${username}`;
 
-    // Note: EventSource doesn't support custom headers directly
-    // We'll need to pass token as query parameter for SSE
-    const eventSource = new EventSource(`${url}?token=${token}`);
-
-    return eventSource;
+    // 표준 EventSource 사용 (query parameter로 username 전송)
+    return new EventSource(url);
   },
 };

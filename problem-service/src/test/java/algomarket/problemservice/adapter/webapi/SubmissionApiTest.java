@@ -139,7 +139,8 @@ class SubmissionApiTest {
 		Long submissionId = jsonNode.get("submissionId").asLong();
 
 		// when
-		var result = mockMvcTester.get().uri(String.format("/submissions/%d/progress", submissionId)).asyncExchange();
+		var result = mockMvcTester.get().uri(String.format("/submissions/%d/progress", submissionId))
+			.param("username", "username").asyncExchange();
 
 		// then
 		assertThat(result)
