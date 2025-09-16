@@ -25,6 +25,10 @@ function App() {
             <Route index element={<Navigate to="/problems" replace />} />
             <Route path="problems" element={<ProblemList />} />
             <Route path="problems/:problemId" element={<ProblemDetail />} />
+            <Route
+              path="problems/draft/:problemId"
+              element={<ProblemDetail />}
+            />
             <Route path="create-problem" element={<CreateProblem />} />
             <Route path="create-problem/new" element={<ProblemCreate />} />
             <Route

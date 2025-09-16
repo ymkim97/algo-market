@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { problemService } from '../services/problemService';
 import { submissionService } from '../services/submissionService';
 import { useAsync } from '../hooks/useAsync';
@@ -17,6 +17,8 @@ import Editor from '@monaco-editor/react';
 
 const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
+  const location = useLocation();
+  const isDraftMode = location.pathname.includes('/problems/draft/');
   // localStorage 키 생성 함수
   const getStorageKey = (key: string) => `problem-${problemId}-${key}`;
 
@@ -394,8 +396,11 @@ if __name__ == "__main__":
     error,
     execute: refetch,
   } = useAsync(
-    () => problemService.getProblem(Number(problemId)),
-    [problemId],
+    () =>
+      isDraftMode
+        ? problemService.getMyProblem(Number(problemId))
+        : problemService.getProblem(Number(problemId)),
+    [problemId, isDraftMode],
     { immediate: true }
   );
 
