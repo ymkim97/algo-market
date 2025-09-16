@@ -51,7 +51,8 @@ export type ProblemStatus = 'DRAFT' | 'PUBLIC';
 
 export interface TestCaseUrl {
   id?: number;
-  url: string;
+  input: string;
+  output: string;
 }
 
 // 문제 생성 요청 타입

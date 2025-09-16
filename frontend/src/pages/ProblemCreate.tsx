@@ -13,6 +13,9 @@ const ProblemCreate: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(true);
   const [problemId, setProblemId] = useState<number | null>(null);
+  const [testCaseUploading, setTestCaseUploading] = useState(false);
+  const [inputFiles, setInputFiles] = useState<File[]>([]);
+  const [outputFiles, setOutputFiles] = useState<File[]>([]);
   const draftCreatedRef = useRef(false);
   const isEditMode = !!editProblemId;
 
@@ -118,6 +121,150 @@ const ProblemCreate: React.FC = () => {
       console.error('Image upload failed:', error);
       throw error;
     }
+  };
+
+  // 중복 파일명 체크 함수
+  const checkDuplicateFiles = (
+    newFiles: File[],
+    existingFiles: File[] = []
+  ) => {
+    const duplicates: string[] = [];
+    const existingNames = existingFiles.map((f) => f.name);
+
+    newFiles.forEach((file) => {
+      if (existingNames.includes(file.name)) {
+        duplicates.push(file.name);
+      }
+    });
+
+    // 기존 업로드된 파일들과도 중복 체크
+    const uploadedFileNames: string[] = [];
+    formData.testCaseUrls.forEach((testCase) => {
+      const inputFileName = testCase.input?.split('/').pop();
+      const outputFileName = testCase.output?.split('/').pop();
+      if (inputFileName) uploadedFileNames.push(inputFileName);
+      if (outputFileName) uploadedFileNames.push(outputFileName);
+    });
+
+    newFiles.forEach((file) => {
+      if (uploadedFileNames.includes(file.name)) {
+        duplicates.push(file.name);
+      }
+    });
+
+    return Array.from(new Set(duplicates)); // 중복 제거
+  };
+
+  // 입력 파일 선택 핸들러
+  const handleInputFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      const duplicates = checkDuplicateFiles(newFiles, outputFiles);
+
+      if (duplicates.length > 0) {
+        toast.error(`중복된 파일명이 있습니다: ${duplicates.join(', ')}`);
+        event.target.value = '';
+        return;
+      }
+
+      setInputFiles(newFiles);
+    }
+    event.target.value = '';
+  };
+
+  // 출력 파일 선택 핸들러
+  const handleOutputFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      const duplicates = checkDuplicateFiles(newFiles, inputFiles);
+
+      if (duplicates.length > 0) {
+        toast.error(`중복된 파일명이 있습니다: ${duplicates.join(', ')}`);
+        event.target.value = '';
+        return;
+      }
+
+      setOutputFiles(newFiles);
+    }
+    event.target.value = '';
+  };
+
+  // 테스트케이스 쌍 업로드 핸들러
+  const handleTestCasePairUpload = async () => {
+    if (!problemId) {
+      toast.error('문제 초안이 아직 생성되지 않았습니다.');
+      return;
+    }
+
+    if (inputFiles.length === 0 || outputFiles.length === 0) {
+      toast.error('입력 파일과 출력 파일을 모두 선택해주세요.');
+      return;
+    }
+
+    if (inputFiles.length !== outputFiles.length) {
+      toast.error('입력 파일과 출력 파일의 개수가 일치해야 합니다.');
+      return;
+    }
+
+    setTestCaseUploading(true);
+
+    try {
+      const newTestCases: TestCaseUrl[] = [];
+
+      for (let i = 0; i < inputFiles.length; i++) {
+        const inputFile = inputFiles[i];
+        const outputFile = outputFiles[i];
+
+        // 입력 파일 업로드
+        const inputUrl = await problemService.uploadTestCase(
+          inputFile,
+          problemId
+        );
+        // 출력 파일 업로드
+        const outputUrl = await problemService.uploadTestCase(
+          outputFile,
+          problemId
+        );
+
+        newTestCases.push({
+          input: inputUrl,
+          output: outputUrl,
+        });
+      }
+
+      // Update testCaseUrls in formData
+      const updatedTestCaseUrls = [...formData.testCaseUrls, ...newTestCases];
+      handleInputChange('testCaseUrls', updatedTestCaseUrls);
+
+      toast.success(
+        `${inputFiles.length}쌍의 테스트케이스가 업로드되었습니다.`
+      );
+
+      // 파일 목록 초기화
+      setInputFiles([]);
+      setOutputFiles([]);
+    } catch (error: any) {
+      console.error('Test case upload failed:', error);
+      toast.error(
+        error.message || '테스트케이스 업로드 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setTestCaseUploading(false);
+    }
+  };
+
+  // 테스트케이스 쌍 삭제 핸들러
+  const removeTestCasePair = (index: number) => {
+    const updatedTestCases = formData.testCaseUrls.filter(
+      (_, i) => i !== index
+    );
+    handleInputChange('testCaseUrls', updatedTestCases);
   };
 
   const handleSaveDraft = async (e: React.FormEvent) => {
@@ -344,38 +491,232 @@ const ProblemCreate: React.FC = () => {
           <h2 className="text-lg font-medium text-gray-900 mb-6">
             채점 테스트케이스 <span className="text-red-500">*</span>
           </h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 48 48"
-            >
-              <path
-                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <div className="mt-4">
-              <p className="text-lg font-medium text-gray-900">
-                테스트케이스 파일 업로드
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                최소 10개 이상의 테스트케이스 파일이 필요합니다.
-              </p>
-              <p className="text-sm text-gray-500">
-                현재 업로드된 파일: {formData.testCaseUrls.length}개
-              </p>
+
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              입력 파일과 출력 파일을 쌍으로 업로드해주세요. 파일명은 매칭
+              순서대로 배치됩니다.
+            </p>
+            <p className="text-xs text-blue-600 mt-2">
+              💡 입력 파일은 .in 확장자, 출력 파일은 .out 확장자를 사용하세요.
+            </p>
+          </div>
+
+          {/* 파일 업로드 영역 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* 입력 파일 업로드 */}
+            <div className="border-2 border-dashed border-blue-300 rounded-lg p-6">
+              <div className="text-center">
+                <svg
+                  className="mx-auto h-8 w-8 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium text-gray-900 mt-2">
+                  입력 파일
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {inputFiles.length}개 선택됨
+                </p>
+                <input
+                  type="file"
+                  accept=".txt,.in"
+                  onChange={handleInputFileSelect}
+                  className="hidden"
+                  id="input-file-upload"
+                  multiple
+                />
+                <label
+                  htmlFor="input-file-upload"
+                  className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 cursor-pointer inline-block"
+                >
+                  입력 파일 선택
+                </label>
+              </div>
             </div>
+
+            {/* 출력 파일 업로드 */}
+            <div className="border-2 border-dashed border-green-300 rounded-lg p-6">
+              <div className="text-center">
+                <svg
+                  className="mx-auto h-8 w-8 text-green-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium text-gray-900 mt-2">
+                  출력 파일
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {outputFiles.length}개 선택됨
+                </p>
+                <input
+                  type="file"
+                  accept=".txt,.out"
+                  onChange={handleOutputFileSelect}
+                  className="hidden"
+                  id="output-file-upload"
+                  multiple
+                />
+                <label
+                  htmlFor="output-file-upload"
+                  className="mt-3 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 cursor-pointer inline-block"
+                >
+                  출력 파일 선택
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* 선택된 파일 목록 */}
+          {(inputFiles.length > 0 || outputFiles.length > 0) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">
+                선택된 파일 목록
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-xs font-medium text-blue-700 mb-2">
+                    입력 파일 ({inputFiles.length}개)
+                  </h4>
+                  <div className="space-y-1">
+                    {inputFiles.map((file, index) => (
+                      <div key={index} className="text-xs text-gray-600">
+                        {index + 1}. {file.name}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-medium text-green-700 mb-2">
+                    출력 파일 ({outputFiles.length}개)
+                  </h4>
+                  <div className="space-y-1">
+                    {outputFiles.map((file, index) => (
+                      <div key={index} className="text-xs text-gray-600">
+                        {index + 1}. {file.name}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 업로드 버튼 */}
+          <div className="text-center mb-6">
             <button
               type="button"
-              className="mt-4 bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              onClick={handleTestCasePairUpload}
+              disabled={
+                testCaseUploading ||
+                inputFiles.length === 0 ||
+                outputFiles.length === 0
+              }
+              className={`px-6 py-2 rounded-md text-sm font-medium ${
+                testCaseUploading ||
+                inputFiles.length === 0 ||
+                outputFiles.length === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+              }`}
             >
-              파일 선택
+              {testCaseUploading ? (
+                <div className="flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-1 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  업로드 중...
+                </div>
+              ) : (
+                '테스트케이스 업로드'
+              )}
             </button>
           </div>
+
+          {/* 업로드된 테스트케이스 쌍 목록 */}
+          {formData.testCaseUrls.length > 0 && (
+            <div className="mt-6">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-medium text-gray-900">
+                  업로드된 테스트케이스 ({formData.testCaseUrls.length}쌍)
+                </h3>
+                <span className="text-xs text-gray-500">
+                  문제 공개를 위해서는 최소 10쌍이상이 필요합니다.
+                </span>
+              </div>
+              <div className="space-y-3">
+                {formData.testCaseUrls.map((testCase, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <span className="text-sm font-medium text-gray-700">
+                        #{index + 1}
+                      </span>
+                      <div className="grid grid-cols-2 gap-4 flex-1">
+                        <div className="flex items-center">
+                          <span className="text-xs text-blue-600 font-medium mr-2">
+                            입력:
+                          </span>
+                          <span className="text-xs text-gray-600 truncate">
+                            {testCase.input?.split('/').pop() || '파일명 없음'}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-xs text-green-600 font-medium mr-2">
+                            출력:
+                          </span>
+                          <span className="text-xs text-gray-600 truncate">
+                            {testCase.output?.split('/').pop() || '파일명 없음'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeTestCasePair(index)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 제출 버튼들 */}
