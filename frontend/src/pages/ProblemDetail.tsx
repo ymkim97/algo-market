@@ -15,6 +15,8 @@ const ProblemDetail: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(50); // 기본 50%
   const [isResizing, setIsResizing] = useState(false);
+  const [topPanelHeight, setTopPanelHeight] = useState(60); // 기본 60%
+  const [isVerticalResizing, setIsVerticalResizing] = useState(false);
   const toast = useToastContext();
 
   // 언어별 기본 코드 템플릿
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     setCode(defaultCode[newLanguage as keyof typeof defaultCode]);
   };
 
-  // 패널 리사이즈 핸들러
+  // 수평 패널 리사이즈 핸들러
   const handleMouseDown = () => {
     setIsResizing(true);
   };
@@ -65,6 +67,30 @@ if __name__ == "__main__":
     setIsResizing(false);
   };
 
+  // 수직 패널 리사이즈 핸들러
+  const handleVerticalMouseDown = () => {
+    setIsVerticalResizing(true);
+  };
+
+  const handleVerticalMouseMove = React.useCallback(
+    (e: MouseEvent) => {
+      if (!isVerticalResizing) return;
+      e.preventDefault();
+
+      const containerHeight = window.innerHeight - 80; // 헤더 높이 제외
+      const newHeight = ((e.clientY - 80) / containerHeight) * 100; // 상단 오프셋 고려
+
+      if (newHeight >= 30 && newHeight <= 80) {
+        setTopPanelHeight(newHeight);
+      }
+    },
+    [isVerticalResizing]
+  );
+
+  const handleVerticalMouseUp = () => {
+    setIsVerticalResizing(false);
+  };
+
   React.useEffect(() => {
     if (isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -80,6 +106,22 @@ if __name__ == "__main__":
       document.body.style.userSelect = '';
     };
   }, [isResizing, handleMouseMove]);
+
+  React.useEffect(() => {
+    if (isVerticalResizing) {
+      document.addEventListener('mousemove', handleVerticalMouseMove);
+      document.addEventListener('mouseup', handleVerticalMouseUp);
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleVerticalMouseMove);
+      document.removeEventListener('mouseup', handleVerticalMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isVerticalResizing, handleVerticalMouseMove]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -271,52 +313,47 @@ if __name__ == "__main__":
           <div className="w-0.5 h-8 bg-white rounded opacity-50"></div>
         </div>
 
-        {/* Code Editor */}
+        {/* Right Panel - Code Editor and Bottom Panel */}
         <div
-          className="bg-white shadow sm:rounded-lg p-6 flex flex-col"
-          style={{ width: `${100 - leftPanelWidth}%`, overflowX: 'scroll' }}
+          className="flex flex-col gap-1"
+          style={{ width: `${100 - leftPanelWidth}%`, overflowY: 'scroll' }}
         >
-          <div className="mb-6">
-            <label className="block text-lg font-semibold text-gray-900 mb-3">
-              💻 언어 선택
-            </label>
-            <div className="flex space-x-3">
-              {[
-                {
-                  value: 'java',
-                  label: 'Java 21',
-                  iconPath: '/java_logo_icon.png',
-                },
-                {
-                  value: 'python',
-                  label: 'Python 3',
-                  iconPath: '/python_logo_icon.png',
-                },
-              ].map((lang) => (
+          {/* Code Editor Panel */}
+          <div
+            className="bg-white shadow sm:rounded-lg p-6 flex flex-col"
+            style={{ height: `${topPanelHeight}%`, overflowY: 'scroll' }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-3">
+                <label className="block text-lg font-semibold text-gray-900">
+                  코드 작성
+                </label>
                 <button
-                  key={lang.value}
-                  onClick={() => handleLanguageChange(lang.value)}
-                  className={`flex items-center px-4 py-2 rounded-lg border-2 transition-all duration-200 ${
-                    language === lang.value
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md'
-                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100'
-                  }`}
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="bg-indigo-600 text-white py-1.5 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm font-medium"
                 >
-                  <img
-                    src={lang.iconPath}
-                    alt={`${lang.label} icon`}
-                    className="w-6 h-6 mr-2"
-                  />
-                  <span className="font-medium">{lang.label}</span>
+                  {submitting ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      제출 중...
+                    </>
+                  ) : (
+                    '제출'
+                  )}
                 </button>
-              ))}
+              </div>
+              <select
+                id="language-select"
+                value={language}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              >
+                <option value="java">Java 21</option>
+                <option value="python">Python 3</option>
+              </select>
             </div>
-          </div>
-
-          <div className="flex-1 flex flex-col mb-4">
-            <label className="block text-lg font-semibold text-gray-900 mb-3">
-              📝 코드 작성
-            </label>
             <div className="flex-1 border border-gray-300 rounded-lg overflow-hidden shadow-sm">
               <Editor
                 height="100%"
@@ -346,21 +383,28 @@ if __name__ == "__main__":
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          {/* Vertical Resize Handle */}
+          <div
+            className={`h-1 bg-gray-300 hover:bg-gray-400 cursor-row-resize flex items-center justify-center ${
+              isVerticalResizing ? 'bg-indigo-500' : ''
+            }`}
+            onMouseDown={handleVerticalMouseDown}
           >
-            {submitting ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" />
-                제출 중...
-              </>
-            ) : (
-              '제출'
-            )}
-          </button>
+            <div className="h-0.5 w-8 bg-white rounded opacity-50"></div>
+          </div>
+
+          {/* Bottom Panel */}
+          <div
+            className="bg-white shadow sm:rounded-lg p-6 overflow-y-auto"
+            style={{ height: `${100 - topPanelHeight}%` }}
+          >
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">결과</h3>
+            </div>
+            <div className="text-gray-500 text-center py-8">
+              코드를 제출하면 여기에 결과가 표시됩니다.
+            </div>
+          </div>
         </div>
       </div>
     </div>
