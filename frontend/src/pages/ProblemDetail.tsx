@@ -11,13 +11,8 @@ import Editor from '@monaco-editor/react';
 
 const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
-  const [language, setLanguage] = useState('java');
-  const [submitting, setSubmitting] = useState(false);
-  const [leftPanelWidth, setLeftPanelWidth] = useState(50); // 기본 50%
-  const [isResizing, setIsResizing] = useState(false);
-  const [topPanelHeight, setTopPanelHeight] = useState(60); // 기본 60%
-  const [isVerticalResizing, setIsVerticalResizing] = useState(false);
-  const toast = useToastContext();
+  // localStorage 키 생성 함수
+  const getStorageKey = (key: string) => `problem-${problemId}-${key}`;
 
   // 언어별 기본 코드 템플릿
   const defaultCode = {
@@ -35,12 +30,49 @@ if __name__ == "__main__":
     main()`,
   };
 
-  const [code, setCode] = useState(defaultCode.java);
+  // 저장된 상태 불러오기
+  const [language, setLanguage] = useState(() => {
+    const saved = localStorage.getItem(getStorageKey('language'));
+    return saved || 'java';
+  });
 
-  // 언어 변경 시 기본 코드도 변경
+  const [codeByLanguage, setCodeByLanguage] = useState<Record<string, string>>(
+    () => {
+      const savedJava = localStorage.getItem(getStorageKey('code-java'));
+      const savedPython = localStorage.getItem(getStorageKey('code-python'));
+      return {
+        java: savedJava || defaultCode.java,
+        python: savedPython || defaultCode.python,
+      };
+    }
+  );
+
+  const [submitting, setSubmitting] = useState(false);
+  const [leftPanelWidth, setLeftPanelWidth] = useState(() => {
+    const saved = localStorage.getItem('problem-detail-left-panel-width');
+    return saved ? parseFloat(saved) : 50;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+  const [topPanelHeight, setTopPanelHeight] = useState(() => {
+    const saved = localStorage.getItem('problem-detail-top-panel-height');
+    return saved ? parseFloat(saved) : 60;
+  });
+  const [isVerticalResizing, setIsVerticalResizing] = useState(false);
+  const toast = useToastContext();
+
+  const code = codeByLanguage[language];
+
+  // 코드 변경 핸들러
+  const handleCodeChange = (newCode: string) => {
+    const newCodeByLanguage = { ...codeByLanguage, [language]: newCode };
+    setCodeByLanguage(newCodeByLanguage);
+    localStorage.setItem(getStorageKey(`code-${language}`), newCode);
+  };
+
+  // 언어 변경 핸들러
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
-    setCode(defaultCode[newLanguage as keyof typeof defaultCode]);
+    localStorage.setItem(getStorageKey('language'), newLanguage);
   };
 
   // 수평 패널 리사이즈 핸들러
@@ -58,6 +90,10 @@ if __name__ == "__main__":
 
       if (newWidth >= 20 && newWidth <= 80) {
         setLeftPanelWidth(newWidth);
+        localStorage.setItem(
+          'problem-detail-left-panel-width',
+          newWidth.toString()
+        );
       }
     },
     [isResizing]
@@ -82,6 +118,10 @@ if __name__ == "__main__":
 
       if (newHeight >= 30 && newHeight <= 80) {
         setTopPanelHeight(newHeight);
+        localStorage.setItem(
+          'problem-detail-top-panel-height',
+          newHeight.toString()
+        );
       }
     },
     [isVerticalResizing]
@@ -359,7 +399,7 @@ if __name__ == "__main__":
                 height="100%"
                 language={language === 'java' ? 'java' : 'python'}
                 value={code}
-                onChange={(value) => setCode(value || '')}
+                onChange={(value) => handleCodeChange(value || '')}
                 theme="vs-dark"
                 loading={
                   <div className="flex items-center justify-center h-96 bg-gray-900 text-white">
