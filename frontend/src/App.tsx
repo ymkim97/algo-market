@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProblemList from './pages/ProblemList';
 import ProblemDetail from './pages/ProblemDetail';
+import CreateProblem from './pages/CreateProblem';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route index element={<Navigate to="/problems" replace />} />
             <Route path="problems" element={<ProblemList />} />
             <Route path="problems/:problemId" element={<ProblemDetail />} />
+            <Route path="create-problem" element={<CreateProblem />} />
           </Route>
         </Routes>
       </Router>

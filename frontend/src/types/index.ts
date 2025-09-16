@@ -39,10 +39,19 @@ export interface Problem {
   problemNumber: number; // 문제 번호
   title: string;
   description?: string; // 목록에서는 없고 상세에서만 있음
-  timeLimit?: number; // 상세에서만 있음 (float)
+  timeLimit?: number; // 상세에서만 있음 (double)
   memoryLimit?: number; // 상세에서만 있음
   submitCount: number;
+  problemStatus?: ProblemStatus; // 내 문제에서만 있음
   exampleTestCases?: ExampleTestCase[]; // 상세에서만 있음
+  testCaseUrls?: TestCaseUrl[]; // 내 문제에서만 있음
+}
+
+export type ProblemStatus = 'DRAFT' | 'PUBLIC';
+
+export interface TestCaseUrl {
+  id: number;
+  url: string;
 }
 
 export interface ExampleTestCase {

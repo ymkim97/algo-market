@@ -30,4 +30,12 @@ export const problemService = {
     );
     return response;
   },
+
+  // Get my problems (problems created by the current user)
+  getMyProblems: async (page: number = 0): Promise<ProblemListResponse> => {
+    const response = await api.get<ProblemListResponse>(
+      `/problems/my?page=${page}&size=10`
+    );
+    return response;
+  },
 };

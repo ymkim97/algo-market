@@ -36,10 +36,10 @@ const Layout: React.FC = () => {
                     문제 목록
                   </Link>
                   <Link
-                    to="/submissions"
+                    to="/create-problem"
                     className="text-gray-900 hover:text-indigo-600 inline-flex items-center px-1 pt-1 text-sm font-medium"
                   >
-                    내 제출
+                    출제하기
                   </Link>
                 </div>
               )}
