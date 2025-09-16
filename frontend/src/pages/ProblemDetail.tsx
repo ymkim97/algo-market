@@ -52,7 +52,7 @@ if __name__ == "__main__":
       e.preventDefault();
 
       const containerWidth = window.innerWidth;
-      const newWidth = ((e.clientX - 32) / (containerWidth - 64)) * 100; // 32px는 패딩
+      const newWidth = (e.clientX / containerWidth) * 100; // 컨테이너 좌우 패딩 제거로 0 기준 계산
 
       if (newWidth >= 20 && newWidth <= 80) {
         setLeftPanelWidth(newWidth);
@@ -167,12 +167,12 @@ if __name__ == "__main__":
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex h-[calc(100vh-8rem)] gap-1">
+    <div className="w-full px-0 py-2">
+      <div className="flex h-[calc(100vh-5rem)] gap-1">
         {/* Problem Description */}
         <div
           className="bg-white shadow sm:rounded-lg p-6 overflow-y-auto"
-          style={{ width: `${leftPanelWidth}%`, overflowX: 'scroll' }}
+          style={{ width: `${leftPanelWidth}%` }}
         >
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
             {problem.problemNumber}. {problem.title}
@@ -191,7 +191,7 @@ if __name__ == "__main__":
                 문제 설명
               </h2>
               <div
-                className="text-gray-700 prose prose-sm"
+                className="text-gray-700 prose prose-sm max-w-full break-words"
                 dangerouslySetInnerHTML={{ __html: problem.description }}
               />
             </div>

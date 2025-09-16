@@ -64,9 +64,7 @@ const ProblemList: React.FC = () => {
     if (currentPage !== 0) {
       setCurrentPage(0);
     }
-  }, [searchQuery]);
-
-  // 스켈레톤 제거 - 바로 메인 화면 표시
+  }, [currentPage, searchQuery]);
 
   if (error) {
     return (
