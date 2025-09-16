@@ -660,87 +660,174 @@ if __name__ == "__main__":
 
             {lastSubmission ? (
               <div className="space-y-4">
-                {/* 제출 기본 정보 */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        제출 정보
-                      </h4>
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">제출 ID:</span> #
-                          {lastSubmission.submissionId}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">제출자:</span>{' '}
+                {/* 채점 상태 카드 */}
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-lg">
+                          <svg
+                            className="w-5 h-5 text-indigo-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            채점 결과
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            코드 실행 결과
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-500">
+                          제출 ID: #{lastSubmission.submissionId} | 제출자:{' '}
                           {lastSubmission.username}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">제출 시간:</span>{' '}
-                          {new Date(lastSubmission.submitTime).toLocaleString(
-                            'ko-KR'
-                          )}
                         </p>
                       </div>
                     </div>
-
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        채점 결과
-                      </h4>
-                      <div className="space-y-2">
-                        {(() => {
-                          const statusDisplay = getStatusDisplay(
-                            lastSubmission.submitStatus
-                          );
-                          return (
-                            <div className="flex items-center space-x-2">
-                              {statusDisplay.icon === 'spinner' ? (
-                                <LoadingSpinner size="sm" />
-                              ) : (
-                                <span className="text-lg">
-                                  {statusDisplay.icon}
-                                </span>
-                              )}
+                  </div>
+                  <div className="p-4">
+                    {(() => {
+                      const statusDisplay = getStatusDisplay(
+                        lastSubmission.submitStatus
+                      );
+                      return (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {statusDisplay.icon === 'spinner' ? (
+                              <LoadingSpinner size="sm" />
+                            ) : (
+                              <span className="text-2xl">
+                                {statusDisplay.icon}
+                              </span>
+                            )}
+                            <div>
                               <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusDisplay.bgColor} ${statusDisplay.textColor}`}
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusDisplay.bgColor} ${statusDisplay.textColor}`}
                               >
                                 {statusDisplay.text}
-                                {lastSubmission.submitStatus === 'JUDGING' &&
+                                {(lastSubmission.submitStatus === 'JUDGING' ||
+                                  lastSubmission.submitStatus === 'PENDING') &&
                                   progressEvent && (
-                                    <span className="ml-1">
-                                      {progressEvent.progressPercent}%
-                                    </span>
-                                  )}
-                                {lastSubmission.submitStatus === 'PENDING' &&
-                                  progressEvent && (
-                                    <span className="ml-1">
+                                    <span className="ml-2 font-bold">
                                       {progressEvent.progressPercent}%
                                     </span>
                                   )}
                               </span>
                             </div>
-                          );
-                        })()}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500">제출 시간</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(
+                                lastSubmission.submitTime
+                              ).toLocaleString('ko-KR')}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
 
+                {/* 성능 정보 카드 */}
+                {(lastSubmission.runtimeMs !== undefined ||
+                  lastSubmission.memoryKb !== undefined) && (
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <div className="p-4 border-b border-gray-200">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
+                          <svg
+                            className="w-5 h-5 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            성능 정보
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            실행 시간 및 메모리 사용량
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-2 gap-4">
                         {lastSubmission.runtimeMs !== undefined && (
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">실행 시간:</span>{' '}
-                            {lastSubmission.runtimeMs}ms
-                          </p>
+                          <div className="bg-blue-50 rounded-lg p-3">
+                            <div className="flex items-center space-x-2">
+                              <svg
+                                className="w-4 h-4 text-blue-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <span className="text-xs font-medium text-blue-700">
+                                실행 시간
+                              </span>
+                            </div>
+                            <p className="mt-1 text-lg font-bold text-blue-900">
+                              {lastSubmission.runtimeMs}ms
+                            </p>
+                          </div>
                         )}
-
                         {lastSubmission.memoryKb !== undefined && (
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">메모리 사용량:</span>{' '}
-                            {lastSubmission.memoryKb}KB
-                          </p>
+                          <div className="bg-purple-50 rounded-lg p-3">
+                            <div className="flex items-center space-x-2">
+                              <svg
+                                className="w-4 h-4 text-purple-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                                />
+                              </svg>
+                              <span className="text-xs font-medium text-purple-700">
+                                메모리
+                              </span>
+                            </div>
+                            <p className="mt-1 text-lg font-bold text-purple-900">
+                              {lastSubmission.memoryKb}KB
+                            </p>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* 에러 상태일 때 추가 정보 */}
                 {(
