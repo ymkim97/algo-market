@@ -1,4 +1,10 @@
-import { Problem, ProblemListResponse, ProblemCreateRequest } from '../types';
+import {
+  Problem,
+  ProblemListResponse,
+  ProblemCreateRequest,
+  InitiateUploadRequest,
+  InitiateUploadResponse,
+} from '../types';
 import api from './api';
 
 export const problemService = {
@@ -76,5 +82,50 @@ export const problemService = {
   getMyProblem: async (problemId: number): Promise<Problem> => {
     const response = await api.get<Problem>(`/problems/my/${problemId}`);
     return response;
+  },
+
+  // Image upload functions
+  initiateUpload: async (
+    request: InitiateUploadRequest
+  ): Promise<InitiateUploadResponse> => {
+    const response = await api.post<InitiateUploadResponse>(
+      '/problems/initiate-upload',
+      request
+    );
+    return response;
+  },
+
+  uploadImage: async (file: File, problemId: number): Promise<string> => {
+    // Get presigned URL
+    const fileSizeKiloBytes = Math.ceil(file.size / 1024);
+    const uploadResponse = await problemService.initiateUpload({
+      originalFileName: file.name,
+      fileSizeKiloBytes,
+      problemId,
+    });
+
+    // Upload to presigned URL
+    const uploadResult = await fetch(uploadResponse.presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+        'x-amz-meta-originalfilename': file.name,
+        'x-amz-meta-filesizekilobytes': fileSizeKiloBytes.toString(),
+        'x-amz-meta-problemid': problemId.toString(),
+      },
+      mode: 'cors',
+    });
+
+    if (!uploadResult.ok) {
+      throw new Error('이미지 업로드에 실패했습니다.');
+    }
+
+    // Extract path from presigned URL and combine with base URL
+    const presignedUrl = new URL(uploadResponse.presignedUrl);
+    const imagePath = presignedUrl.pathname; // e.g., "/problems/1/images/f5aede3f-ff72-4bfb-be96-61517216eb85-data.svg"
+    const finalImageUrl = `https://storage.algomarket.site${imagePath}`;
+
+    return finalImageUrl;
   },
 };

@@ -143,3 +143,16 @@ export interface CompletedEvent {
   finalStatus: SubmissionStatus;
   timeStamp: string;
 }
+
+// Image Upload Types
+export interface InitiateUploadRequest {
+  originalFileName: string;
+  fileSizeKiloBytes: number;
+  problemId: number;
+}
+
+export interface InitiateUploadResponse {
+  presignedUrl: string;
+  imageUrl: string;
+  key: string;
+}

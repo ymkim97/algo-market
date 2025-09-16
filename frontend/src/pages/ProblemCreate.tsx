@@ -111,17 +111,13 @@ const ProblemCreate: React.FC = () => {
       throw new Error('문제 초안이 아직 생성되지 않았습니다.');
     }
 
-    // 임시로 파일의 ObjectURL을 반환 (실제로는 presigned URL로 업로드 후 실제 URL 반환)
-    // TODO: presigned URL 방식으로 업로드 구현
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const objectUrl = URL.createObjectURL(file);
-        console.log(
-          `이미지 업로드 for problemId: ${problemId}, fileName: ${file.name}`
-        );
-        resolve(objectUrl);
-      }, 1000); // 1초 지연으로 업로드 시뮬레이션
-    });
+    try {
+      const imageUrl = await problemService.uploadImage(file, problemId);
+      return imageUrl;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      throw error;
+    }
   };
 
   const handleSaveDraft = async (e: React.FormEvent) => {

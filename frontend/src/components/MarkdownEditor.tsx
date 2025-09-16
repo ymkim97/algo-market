@@ -28,8 +28,8 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       setIsUploading(true);
       const imageUrl = await onImageUpload(file);
 
-      // 마크다운에 이미지 문법 삽입
-      const imageMarkdown = `![${file.name}](${imageUrl})`;
+      // HTML img 태그로 삽입하여 크기 조절 가능하도록
+      const imageMarkdown = `<img src="${imageUrl}" alt="${file.name}" style="width: 100%; height: auto;" />`;
       onChange(value + '\n' + imageMarkdown);
     } catch (error) {
       console.error('Image upload failed:', error);
@@ -273,28 +273,36 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
       {/* 도움말 */}
       <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-        <div className="flex flex-wrap gap-4 text-xs text-gray-600">
-          <span>
-            <code className="bg-gray-200 px-1 rounded"># 제목</code>
-          </span>
-          <span>
-            <code className="bg-gray-200 px-1 rounded">**굵게**</code>
-          </span>
-          <span>
-            <code className="bg-gray-200 px-1 rounded">*기울임*</code>
-          </span>
-          <span>
-            <code className="bg-gray-200 px-1 rounded">`코드`</code>
-          </span>
-          <span>
-            <code className="bg-gray-200 px-1 rounded">- 리스트</code>
-          </span>
-          <span>
-            <code className="bg-gray-200 px-1 rounded">[링크](url)</code>
-          </span>
-          <span>
-            <code className="bg-gray-200 px-1 rounded">![이미지](url)</code>
-          </span>
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+            <span>
+              <code className="bg-gray-200 px-1 rounded"># 제목</code>
+            </span>
+            <span>
+              <code className="bg-gray-200 px-1 rounded">**굵게**</code>
+            </span>
+            <span>
+              <code className="bg-gray-200 px-1 rounded">*기울임*</code>
+            </span>
+            <span>
+              <code className="bg-gray-200 px-1 rounded">`코드`</code>
+            </span>
+            <span>
+              <code className="bg-gray-200 px-1 rounded">- 리스트</code>
+            </span>
+            <span>
+              <code className="bg-gray-200 px-1 rounded">[링크](url)</code>
+            </span>
+          </div>
+          <div className="text-xs text-gray-500">
+            <span className="font-medium">이미지 크기 조절:</span>
+            <code className="bg-gray-200 px-1 rounded ml-1">
+              style="width: 300px;"
+            </code>
+            <code className="bg-gray-200 px-1 rounded ml-1">
+              style="width: 50%;"
+            </code>
+          </div>
         </div>
       </div>
     </div>
