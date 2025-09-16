@@ -52,7 +52,7 @@ const Layout: React.FC = () => {
                   </span>
                   <button
                     onClick={handleLogout}
-                    className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                    className="bg-gray-600 text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                   >
                     로그아웃
                   </button>
