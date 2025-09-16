@@ -11,7 +11,9 @@ public record ProgressEvent(
 	Integer progressPercent,
 	Integer currentTest,
 	Integer totalTest,
-	LocalDateTime timeStamp
+	LocalDateTime timeStamp,
+	Integer runtimeMs,
+	Integer memoryKb
 ) {
 
 }
