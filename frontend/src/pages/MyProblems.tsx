@@ -5,13 +5,20 @@ import { Problem, ProblemStatus } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import Pagination from '../components/Pagination';
+import { useToastContext } from '../context/ToastContext';
 
 const MyProblems: React.FC = () => {
+  const { success, error: showError } = useToastContext();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [selectedProblemId, setSelectedProblemId] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     loadMyProblems(currentPage);
@@ -33,6 +40,31 @@ const MyProblems: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const showPublishConfirm = (problemId: number) => {
+    setSelectedProblemId(problemId);
+    setShowPublishModal(true);
+  };
+
+  const handlePublishProblem = async () => {
+    if (!selectedProblemId) return;
+
+    try {
+      await problemService.publishProblem(selectedProblemId);
+      await loadMyProblems(currentPage);
+      setShowPublishModal(false);
+      setSelectedProblemId(null);
+      setShowSuccessModal(true);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        '문제를 공개하는 중 오류가 발생했습니다.';
+      showError(errorMessage);
+      setShowPublishModal(false);
+      setSelectedProblemId(null);
+    }
   };
 
   const getStatusBadge = (status: ProblemStatus) => {
@@ -406,7 +438,13 @@ const MyProblems: React.FC = () => {
                               </div>
                             </div>
                             <div className="relative group">
-                              <button className="text-gray-400 hover:text-green-600 p-2">
+                              <button
+                                onClick={() =>
+                                  problem.problemId &&
+                                  showPublishConfirm(problem.problemId)
+                                }
+                                className="text-gray-400 hover:text-green-600 p-2"
+                              >
                                 <svg
                                   className="w-5 h-5"
                                   fill="none"
@@ -451,6 +489,104 @@ const MyProblems: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* 공개 확인 모달 */}
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                <svg
+                  className="h-6 w-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mt-4">
+                문제를 공개하시겠습니까?
+              </h3>
+              <div className="mt-4 px-4 py-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800 font-medium mb-2">
+                  ⚠️ 주의사항
+                </p>
+                <ul className="text-sm text-yellow-700 text-left space-y-1">
+                  <li>• 한번 공개한 문제는 비공개로 되돌릴 수 없습니다</li>
+                  <li>• 공개된 문제는 삭제할 수 없습니다</li>
+                  <li>• 공개 후에는 내용 수정이 제한됩니다</li>
+                </ul>
+              </div>
+              <div className="flex justify-center mt-6 space-x-3">
+                <button
+                  onClick={() => {
+                    setShowPublishModal(false);
+                    setSelectedProblemId(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handlePublishProblem}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  공개하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 공개 성공 모달 */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg
+                  className="h-6 w-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mt-4">
+                문제가 성공적으로 공개되었습니다!
+              </h3>
+              <div className="mt-4 px-4 py-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">
+                  🎉 축하합니다! 🎉
+                  <br />
+                  문제가 공개되어 다른 사용자들이 도전할 수 있습니다.
+                </p>
+              </div>
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

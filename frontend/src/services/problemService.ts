@@ -191,4 +191,9 @@ export const problemService = {
       throw error;
     }
   },
+
+  // Publish problem
+  publishProblem: async (problemId: number): Promise<void> => {
+    await api.put<void>(`/problems/publish/${problemId}`);
+  },
 };
