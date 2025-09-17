@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ProblemCreateRequest, ExampleTestCase, TestCaseUrl } from '../types';
 import { problemService } from '../services/problemService';
 import { useToastContext } from '../context/ToastContext';
-import LoadingSpinner from '../components/LoadingSpinner';
 import ProgressBar from '../components/ProgressBar';
 import MarkdownEditor from '../components/MarkdownEditor';
 
