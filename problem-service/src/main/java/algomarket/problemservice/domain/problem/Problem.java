@@ -2,6 +2,7 @@ package algomarket.problemservice.domain.problem;
 
 import static org.springframework.util.Assert.state;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -61,6 +62,9 @@ public class Problem {
 	@Column(nullable = true, columnDefinition = "JSON")
 	private List<TestCaseUrl> testCaseUrls;
 
+	@Column(nullable = true)
+	private LocalDateTime lastModified;
+
 	public static Problem create(ProblemCreateRequest createRequest, String authorUsername) {
 		Problem problem = new Problem();
 
@@ -75,11 +79,14 @@ public class Problem {
 		problem.number = null;
 		problem.submitCount = 0;
 		problem.problemStatus = ProblemStatus.DRAFT;
+		problem.lastModified = LocalDateTime.now();
 
 		return problem;
 	}
 
 	public void submit() {
+		validateTestCaseCount();
+
 		if (problemStatus == ProblemStatus.PUBLIC) {
 			submitCount += 1;
 		}
@@ -98,9 +105,7 @@ public class Problem {
 			throw new IllegalStateException("문제 설명을 입력해주세요.");
 		}
 
-		if (testCaseUrls.size() < 10) {
-			throw new IllegalStateException("문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.");
-		}
+		validateTestCaseCount();
 
 		problemStatus = ProblemStatus.PUBLIC;
 		number = problemNumber;
@@ -117,6 +122,12 @@ public class Problem {
 		memoryLimitMb = validateMemoryLimit(modifyDraftRequest.memoryLimitMb());
 		exampleTestCases = modifyDraftRequest.exampleTestCases();
 		testCaseUrls = modifyDraftRequest.testCaseUrls();
+
+		lastModified = LocalDateTime.now();
+	}
+
+	public boolean isDraft() {
+		return problemStatus == ProblemStatus.DRAFT;
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {
@@ -129,5 +140,11 @@ public class Problem {
 		state(memoryLimit >= 128 && memoryLimit <= 512, "메모리 제한은 128MB 이상, 512MB 이하로 설정 가능합니다.");
 
 		return memoryLimit;
+	}
+
+	private void validateTestCaseCount() {
+		if (testCaseUrls.size() < 10) {
+			throw new InsufficientTestCases("문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.");
+		}
 	}
 }
