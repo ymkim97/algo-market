@@ -27,22 +27,20 @@ const Layout: React.FC = () => {
                   AlgoMarket
                 </Link>
               </div>
-              {isAuthenticated && (
-                <div className="ml-6 flex space-x-8">
-                  <Link
-                    to="/problems"
-                    className="text-gray-900 hover:text-indigo-600 inline-flex items-center px-1 pt-1 text-sm font-medium"
-                  >
-                    문제 목록
-                  </Link>
-                  <Link
-                    to="/create-problem"
-                    className="text-gray-900 hover:text-indigo-600 inline-flex items-center px-1 pt-1 text-sm font-medium"
-                  >
-                    출제하기
-                  </Link>
-                </div>
-              )}
+              <div className="ml-6 flex space-x-8">
+                <Link
+                  to="/problems"
+                  className="text-gray-900 hover:text-indigo-600 inline-flex items-center px-1 pt-1 text-sm font-medium"
+                >
+                  문제 목록
+                </Link>
+                <Link
+                  to="/create-problem"
+                  className="text-gray-900 hover:text-indigo-600 inline-flex items-center px-1 pt-1 text-sm font-medium"
+                >
+                  출제하기
+                </Link>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               {isAuthenticated ? (

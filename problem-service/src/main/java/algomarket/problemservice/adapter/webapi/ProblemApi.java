@@ -5,6 +5,7 @@ import java.net.URI;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,7 @@ import algomarket.problemservice.application.dto.ProblemListResponse;
 import algomarket.problemservice.application.provided.ProblemCreator;
 import algomarket.problemservice.application.provided.ProblemFileManager;
 import algomarket.problemservice.application.provided.ProblemFinder;
+import algomarket.problemservice.application.provided.ProblemRemover;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;
 import algomarket.problemservice.domain.problem.ProblemDraftModifyRequest;
 import algomarket.problemservice.domain.problem.ProblemInfoResponse;
@@ -33,6 +35,7 @@ public class ProblemApi {
 
 	private final ProblemFinder problemFinder;
 	private final ProblemCreator problemCreator;
+	private final ProblemRemover problemRemover;
 	private final ProblemFileManager problemFileManager;
 
 	@GetMapping
@@ -61,6 +64,14 @@ public class ProblemApi {
 		MyProblemInfoResponse response = problemFinder.findMyProblem(problemId, username);
 
 		return ResponseEntity.ok(response);
+	}
+
+	@DeleteMapping("/my/{problemId}")
+	public ResponseEntity<Void> deleteMyDraftProblem(@PathVariable Long problemId, @CurrentUsername String username) {
+		problemFileManager.deleteAllProblemFiles(problemId, username);
+		problemRemover.removeDraft(problemId, username);
+
+		return ResponseEntity.ok().build();
 	}
 
 	@PutMapping("/publish/{problemId}")

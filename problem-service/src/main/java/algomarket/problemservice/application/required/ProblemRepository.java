@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 
@@ -32,4 +33,8 @@ public interface ProblemRepository extends Repository<Problem, Long> {
 	boolean existsByTitleAndIdNot(String title, Long problemId);
 
 	boolean existsByIdAndAuthorUsername(Long problemId, String username);
+
+	@Modifying
+	@Query("DELETE FROM Problem p WHERE p.id = :problemId AND p.authorUsername = :username AND p.problemStatus = algomarket.problemservice.domain.problem.ProblemStatus.DRAFT")
+	void deleteDraftProblem(Long problemId, String username);
 }

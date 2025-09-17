@@ -15,6 +15,7 @@ const MyProblems: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [selectedProblemId, setSelectedProblemId] = useState<number | null>(
     null
@@ -47,6 +48,11 @@ const MyProblems: React.FC = () => {
     setShowPublishModal(true);
   };
 
+  const showDeleteConfirm = (problemId: number) => {
+    setSelectedProblemId(problemId);
+    setShowDeleteModal(true);
+  };
+
   const handlePublishProblem = async () => {
     if (!selectedProblemId) return;
 
@@ -67,6 +73,26 @@ const MyProblems: React.FC = () => {
     }
   };
 
+  const handleDeleteProblem = async () => {
+    if (!selectedProblemId) return;
+
+    try {
+      await problemService.deleteProblem(selectedProblemId);
+      await loadMyProblems(currentPage);
+      setShowDeleteModal(false);
+      setSelectedProblemId(null);
+      success('문제가 성공적으로 삭제되었습니다.');
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        '문제를 삭제하는 중 오류가 발생했습니다.';
+      showError(errorMessage);
+      setShowDeleteModal(false);
+      setSelectedProblemId(null);
+    }
+  };
+
   const getStatusBadge = (status: ProblemStatus) => {
     const styles = {
       DRAFT: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -74,7 +100,7 @@ const MyProblems: React.FC = () => {
     };
 
     const labels = {
-      DRAFT: '초안',
+      DRAFT: '임시 저장',
       PUBLIC: '공개',
     };
 
@@ -217,7 +243,7 @@ const MyProblems: React.FC = () => {
                         <div className="flex items-center">
                           {problem.problemStatus === 'DRAFT' ? (
                             <span className="text-lg font-medium text-gray-700">
-                              [초안] {problem.title}
+                              [임시 저장] {problem.title}
                             </span>
                           ) : (
                             <Link
@@ -369,8 +395,8 @@ const MyProblems: React.FC = () => {
                         </div>
                       </div>
                       <div className="ml-4 flex items-center space-x-2">
-                        <div className="relative group">
-                          {problem.problemStatus === 'DRAFT' ? (
+                        {problem.problemStatus === 'DRAFT' && (
+                          <div className="relative group">
                             <Link
                               to={`/create-problem/edit/${problem.problemId}`}
                               className="text-gray-400 hover:text-gray-600 p-2 block"
@@ -389,29 +415,11 @@ const MyProblems: React.FC = () => {
                                 />
                               </svg>
                             </Link>
-                          ) : (
-                            <button className="text-gray-400 hover:text-gray-600 p-2">
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                              </svg>
-                            </button>
-                          )}
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-                            {problem.problemStatus === 'DRAFT'
-                              ? '수정'
-                              : '편집'}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                              수정
+                            </div>
                           </div>
-                        </div>
+                        )}
                         {problem.problemStatus === 'DRAFT' && (
                           <>
                             <div className="relative group">
@@ -467,6 +475,32 @@ const MyProblems: React.FC = () => {
                               </button>
                               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
                                 공개
+                              </div>
+                            </div>
+                            <div className="relative group">
+                              <button
+                                onClick={() =>
+                                  problem.problemId &&
+                                  showDeleteConfirm(problem.problemId)
+                                }
+                                className="text-gray-400 hover:text-red-600 p-2"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                                삭제
                               </div>
                             </div>
                           </>
@@ -539,6 +573,61 @@ const MyProblems: React.FC = () => {
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                 >
                   공개하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg
+                  className="h-6 w-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mt-4">
+                문제를 삭제하시겠습니까?
+              </h3>
+              <div className="mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800 font-medium mb-2">
+                  ⚠️ 주의사항
+                </p>
+                <ul className="text-sm text-red-700 text-left space-y-1">
+                  <li>• 삭제된 문제는 복구할 수 없습니다</li>
+                  <li>• 모든 관련 데이터가 영구적으로 삭제됩니다</li>
+                  <li>• 이 작업은 되돌릴 수 없습니다</li>
+                </ul>
+              </div>
+              <div className="flex justify-center mt-6 space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setSelectedProblemId(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDeleteProblem}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  삭제하기
                 </button>
               </div>
             </div>

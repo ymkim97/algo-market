@@ -7,4 +7,6 @@ public interface FileStorage {
 	String createKeyForProblemUpload(Long problemId, String fileName);
 
 	String createPresignedUrl(String key,  Map<String, String> metadata);
+
+	void deleteAllProblemFiles(Long problemId);
 }

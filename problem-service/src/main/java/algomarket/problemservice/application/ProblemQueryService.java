@@ -1,6 +1,5 @@
 package algomarket.problemservice.application;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,13 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import algomarket.problemservice.application.dto.InitiateUploadRequest;
-import algomarket.problemservice.application.dto.InitiateUploadResponse;
 import algomarket.problemservice.application.dto.MyProblemInfoResponse;
 import algomarket.problemservice.application.dto.ProblemListResponse;
-import algomarket.problemservice.application.provided.ProblemFileManager;
 import algomarket.problemservice.application.provided.ProblemFinder;
-import algomarket.problemservice.application.required.FileStorage;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.Problem;
@@ -29,13 +24,12 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
+public class ProblemQueryService implements ProblemFinder {
 
 	private final int PAGE_SIZE = 10;
 
 	private final ProblemRepository problemRepository;
 	private final SubmissionRepository submissionRepository;
-	private final FileStorage fileStorage;
 
 	@Override
 	public ProblemInfoResponse find(Long problemNumber) {
@@ -81,27 +75,5 @@ public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
 			.toList();
 
 		return new PageImpl<>(responses, pageable, myProblems.getTotalElements());
-	}
-
-	@Override
-	public InitiateUploadResponse initiateUpload(InitiateUploadRequest request, String username) {
-		validateProblem(request.problemId(), username);
-
-		String key = fileStorage.createKeyForProblemUpload(request.problemId(), request.originalFileName());
-
-		Map<String, String> metadata = new HashMap<>();
-		metadata.put("originalFileName", request.originalFileName());
-		metadata.put("fileSizeKiloBytes", String.valueOf(request.fileSizeKiloBytes()));
-		metadata.put("problemId", String.valueOf(request.problemId()));
-
-		String presignedUrl = fileStorage.createPresignedUrl(key, metadata);
-
-		return new InitiateUploadResponse(key, presignedUrl);
-	}
-
-	private void validateProblem(Long problemId, String username) {
-		if (!problemRepository.existsByIdAndAuthorUsername(problemId, username)) {
-			throw new NotFoundException("존재하지 않는 문제 ID 입니다: " + problemId);
-		}
 	}
 }

@@ -196,4 +196,9 @@ export const problemService = {
   publishProblem: async (problemId: number): Promise<void> => {
     await api.put<void>(`/problems/publish/${problemId}`);
   },
+
+  // Delete my problem
+  deleteProblem: async (problemId: number): Promise<void> => {
+    await api.delete<void>(`/problems/my/${problemId}`);
+  },
 };

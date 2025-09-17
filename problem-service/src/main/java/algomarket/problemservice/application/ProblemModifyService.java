@@ -7,20 +7,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import algomarket.problemservice.adapter.lock.DistributedLock;
 import algomarket.problemservice.application.provided.ProblemCreator;
+import algomarket.problemservice.application.provided.ProblemRemover;
 import algomarket.problemservice.application.required.ProblemRepository;
 import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemCreateRequest;
-import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.domain.problem.ProblemDraftModifyRequest;
+import algomarket.problemservice.domain.problem.ProblemInfoResponse;
 import algomarket.problemservice.domain.service.ProblemPublisher;
 import algomarket.problemservice.domain.submission.Submission;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ProblemModifyService implements ProblemCreator {
+public class ProblemModifyService implements ProblemCreator, ProblemRemover {
 
 	private final ProblemRepository problemRepository;
 	private final SubmissionRepository submissionRepository;
@@ -61,6 +62,12 @@ public class ProblemModifyService implements ProblemCreator {
 		
 		problemPublisher.publish(username, problem, submissions, maxProblemNumber);
 		problemRepository.save(problem);
+	}
+
+	@Override
+	@Transactional
+	public void removeDraft(Long problemId, String username) {
+		problemRepository.deleteDraftProblem(problemId, username);
 	}
 
 	private void checkDuplicateTitle(String title, Long problemIdNotToContain) {
