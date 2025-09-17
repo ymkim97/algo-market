@@ -11,6 +11,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ProblemList from './pages/ProblemList';
 import ProblemDetail from './pages/ProblemDetail';
+import MyProblems from './pages/MyProblems';
+import ProblemForm from './pages/ProblemForm';
 
 function App() {
   return (
@@ -23,6 +25,16 @@ function App() {
             <Route index element={<Navigate to="/problems" replace />} />
             <Route path="problems" element={<ProblemList />} />
             <Route path="problems/:problemId" element={<ProblemDetail />} />
+            <Route
+              path="problems/draft/:problemId"
+              element={<ProblemDetail />}
+            />
+            <Route path="create-problem" element={<MyProblems />} />
+            <Route path="create-problem/new" element={<ProblemForm />} />
+            <Route
+              path="create-problem/edit/:problemId"
+              element={<ProblemForm />}
+            />
           </Route>
         </Routes>
       </Router>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { problemService } from '../services/problemService';
 import { submissionService } from '../services/submissionService';
 import { useAsync } from '../hooks/useAsync';
@@ -17,6 +17,8 @@ import Editor from '@monaco-editor/react';
 
 const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
+  const location = useLocation();
+  const isDraftMode = location.pathname.includes('/problems/draft/');
   // localStorage 키 생성 함수
   const getStorageKey = (key: string) => `problem-${problemId}-${key}`;
 
@@ -394,8 +396,11 @@ if __name__ == "__main__":
     error,
     execute: refetch,
   } = useAsync(
-    () => problemService.getProblem(Number(problemId)),
-    [problemId],
+    () =>
+      isDraftMode
+        ? problemService.getMyProblem(Number(problemId))
+        : problemService.getProblem(Number(problemId)),
+    [problemId, isDraftMode],
     { immediate: true }
   );
 
@@ -425,7 +430,23 @@ if __name__ == "__main__":
 
       toast.success('코드가 제출되었습니다!');
     } catch (error: any) {
-      toast.error(error.message || '코드 제출 중 오류가 발생했습니다.');
+      console.error('Submit error:', error);
+
+      // 서버에서 보내는 에러 메시지 추출
+      let errorMessage = '코드 제출 중 오류가 발생했습니다.';
+
+      if (error?.response?.data?.detail) {
+        // Spring Boot의 detail 필드 (주요 에러 메시지)
+        errorMessage = error.response.data.detail;
+      } else if (error?.response?.data?.message) {
+        // message 필드
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        // 일반적인 에러 메시지
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -626,6 +647,7 @@ if __name__ == "__main__":
                 }
                 options={{
                   fontSize: 14,
+                  wordWrap: 'on',
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,
                   lineNumbers: 'on',

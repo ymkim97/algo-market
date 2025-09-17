@@ -2,6 +2,7 @@ package algomarket.problemservice.domain.problem;
 
 import static org.springframework.util.Assert.state;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,7 +32,7 @@ public class Problem {
 	@Column(nullable = true, unique = true)
 	private Long number;
 
-	@Column(nullable = false,  unique = true, length = 100)
+	@Column(nullable = true,  unique = true, length = 100)
 	private String title;
 
 	@Column(nullable = false,  length = 30)
@@ -61,10 +62,13 @@ public class Problem {
 	@Column(nullable = true, columnDefinition = "JSON")
 	private List<TestCaseUrl> testCaseUrls;
 
+	@Column(nullable = true)
+	private LocalDateTime lastModified;
+
 	public static Problem create(ProblemCreateRequest createRequest, String authorUsername) {
 		Problem problem = new Problem();
 
-		problem.title = Objects.requireNonNull(createRequest.title());
+		problem.title = createRequest.title();
 		problem.authorUsername = Objects.requireNonNull(authorUsername);
 		problem.description = Objects.requireNonNull(createRequest.description());
 		problem.timeLimitSec = validateTimeLimit(createRequest.timeLimitSec());
@@ -75,11 +79,14 @@ public class Problem {
 		problem.number = null;
 		problem.submitCount = 0;
 		problem.problemStatus = ProblemStatus.DRAFT;
+		problem.lastModified = LocalDateTime.now();
 
 		return problem;
 	}
 
 	public void submit() {
+		validateTestCaseCount();
+
 		if (problemStatus == ProblemStatus.PUBLIC) {
 			submitCount += 1;
 		}
@@ -89,6 +96,16 @@ public class Problem {
 		if (problemStatus == ProblemStatus.PUBLIC) {
 			throw new IllegalStateException("이미 공개된 문제입니다.");
 		}
+
+		if (title.isBlank() || title.length() > 100) {
+			throw new IllegalStateException("문제 제목은 1자 이상, 100자 이하이어야 합니다.");
+		}
+
+		if (description.isBlank()) {
+			throw new IllegalStateException("문제 설명을 입력해주세요.");
+		}
+
+		validateTestCaseCount();
 
 		problemStatus = ProblemStatus.PUBLIC;
 		number = problemNumber;
@@ -105,6 +122,12 @@ public class Problem {
 		memoryLimitMb = validateMemoryLimit(modifyDraftRequest.memoryLimitMb());
 		exampleTestCases = modifyDraftRequest.exampleTestCases();
 		testCaseUrls = modifyDraftRequest.testCaseUrls();
+
+		lastModified = LocalDateTime.now();
+	}
+
+	public boolean isDraft() {
+		return problemStatus == ProblemStatus.DRAFT;
 	}
 
 	private static Double validateTimeLimit(Double timeLimit) {
@@ -117,5 +140,11 @@ public class Problem {
 		state(memoryLimit >= 128 && memoryLimit <= 512, "메모리 제한은 128MB 이상, 512MB 이하로 설정 가능합니다.");
 
 		return memoryLimit;
+	}
+
+	private void validateTestCaseCount() {
+		if (testCaseUrls.size() < 10) {
+			throw new InsufficientTestCases("문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.");
+		}
 	}
 }

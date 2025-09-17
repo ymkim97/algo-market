@@ -1,10 +1,15 @@
 package algomarket.problemservice.application;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +21,10 @@ import algomarket.problemservice.application.provided.ProblemFileManager;
 import algomarket.problemservice.application.provided.ProblemFinder;
 import algomarket.problemservice.application.required.FileStorage;
 import algomarket.problemservice.application.required.ProblemRepository;
+import algomarket.problemservice.application.required.SubmissionRepository;
 import algomarket.problemservice.domain.problem.Problem;
 import algomarket.problemservice.domain.problem.ProblemInfoResponse;
+import algomarket.problemservice.domain.shared.Language;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,6 +34,7 @@ public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
 	private final int PAGE_SIZE = 10;
 
 	private final ProblemRepository problemRepository;
+	private final SubmissionRepository submissionRepository;
 	private final FileStorage fileStorage;
 
 	@Override
@@ -52,7 +60,27 @@ public class ProblemQueryService implements ProblemFinder, ProblemFileManager {
 
 	@Override
 	public Page<MyProblemInfoResponse> listMyProblems(Integer pageNumber, String username) {
-		return problemRepository.findAllMyProblems(PageRequest.of(pageNumber, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "number")), username);
+		Pageable pageable = PageRequest.of(pageNumber, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "number"));
+
+		Page<Problem> myProblems = problemRepository.findAllMyProblems(pageable, username);
+
+		List<Long> draftProblemIds = myProblems.getContent().stream()
+			.filter(Problem::isDraft)
+			.map(Problem::getId)
+			.toList();
+
+		Map<Long, Set<Language>> solvedLanguagesForDraftByProblemId =
+			submissionRepository.findSolvedLanguagesForDraftByProblemId(draftProblemIds).stream()
+				.collect(Collectors.groupingBy(
+					row -> (Long) row[0],
+					Collectors.mapping(row -> (Language) row[1], Collectors.toSet())
+				));
+
+		List<MyProblemInfoResponse> responses = myProblems.getContent().stream()
+			.map(problem -> MyProblemInfoResponse.of(problem, solvedLanguagesForDraftByProblemId.get(problem.getId())))
+			.toList();
+
+		return new PageImpl<>(responses, pageable, myProblems.getTotalElements());
 	}
 
 	@Override

@@ -55,8 +55,8 @@ const ProblemList: React.FC = () => {
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
-    console.log('Page change requested:', page, '-> backend page:', page - 1);
-    setCurrentPage(page - 1); // UI에서는 1부터, 백엔드에서는 0부터
+    console.log('Page change requested:', page);
+    setCurrentPage(page);
   };
 
   // 검색이 변경되면 첫 페이지로
@@ -174,7 +174,7 @@ const ProblemList: React.FC = () => {
         {totalElements > 0 && (
           <div className="mt-6">
             <Pagination
-              currentPage={currentPage + 1}
+              currentPage={currentPage}
               totalPages={Math.max(totalPages, 1)}
               onPageChange={handlePageChange}
             />

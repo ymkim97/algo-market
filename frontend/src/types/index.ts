@@ -39,10 +39,32 @@ export interface Problem {
   problemNumber: number; // 문제 번호
   title: string;
   description?: string; // 목록에서는 없고 상세에서만 있음
-  timeLimit?: number; // 상세에서만 있음 (float)
+  timeLimit?: number; // 상세에서만 있음 (double)
   memoryLimit?: number; // 상세에서만 있음
   submitCount: number;
+  problemStatus?: ProblemStatus; // 내 문제에서만 있음
   exampleTestCases?: ExampleTestCase[]; // 상세에서만 있음
+  testCaseUrls?: TestCaseUrl[]; // 내 문제에서만 있음
+  lastModified?: string; // 내 문제에서만 있음
+  solvedLanguages?: string[]; // Draft 문제에서만 있음 - 해결한 언어 목록
+}
+
+export type ProblemStatus = 'DRAFT' | 'PUBLIC';
+
+export interface TestCaseUrl {
+  id?: number;
+  input: string;
+  output: string;
+}
+
+// 문제 생성 요청 타입
+export interface ProblemCreateRequest {
+  title: string;
+  description: string;
+  timeLimitSec: number;
+  memoryLimitMb: number;
+  exampleTestCases: ExampleTestCase[];
+  testCaseUrls: TestCaseUrl[];
 }
 
 export interface ExampleTestCase {
@@ -123,4 +145,17 @@ export interface CompletedEvent {
   username: string;
   finalStatus: SubmissionStatus;
   timeStamp: string;
+}
+
+// Image Upload Types
+export interface InitiateUploadRequest {
+  originalFileName: string;
+  fileSizeKiloBytes: number;
+  problemId: number;
+}
+
+export interface InitiateUploadResponse {
+  presignedUrl: string;
+  imageUrl: string;
+  key: string;
 }
