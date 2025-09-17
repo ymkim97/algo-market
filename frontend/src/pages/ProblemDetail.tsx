@@ -19,6 +19,7 @@ const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
   const location = useLocation();
   const isDraftMode = location.pathname.includes('/problems/draft/');
+  const [actualProblemId, setActualProblemId] = useState<number | null>(null);
   // localStorage 키 생성 함수
   const getStorageKey = (key: string) => `problem-${problemId}-${key}`;
 
@@ -396,10 +397,18 @@ if __name__ == "__main__":
     error,
     execute: refetch,
   } = useAsync(
-    () =>
-      isDraftMode
-        ? problemService.getMyProblem(Number(problemId))
-        : problemService.getProblem(Number(problemId)),
+    async () => {
+      const result = isDraftMode
+        ? await problemService.getMyProblem(Number(problemId))
+        : await problemService.getProblem(Number(problemId));
+
+      // 실제 problemId 저장
+      if (result && result.problemId) {
+        setActualProblemId(result.problemId);
+      }
+
+      return result;
+    },
     [problemId, isDraftMode],
     { immediate: true }
   );
@@ -413,7 +422,7 @@ if __name__ == "__main__":
     setSubmitting(true);
     try {
       const submission = await submissionService.submitCode(
-        Number(problemId),
+        actualProblemId || Number(problemId),
         code,
         language.toUpperCase()
       );

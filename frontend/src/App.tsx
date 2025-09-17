@@ -13,6 +13,7 @@ import ProblemList from './pages/ProblemList';
 import ProblemDetail from './pages/ProblemDetail';
 import MyProblems from './pages/MyProblems';
 import ProblemForm from './pages/ProblemForm';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -29,11 +30,29 @@ function App() {
               path="problems/draft/:problemId"
               element={<ProblemDetail />}
             />
-            <Route path="create-problem" element={<MyProblems />} />
-            <Route path="create-problem/new" element={<ProblemForm />} />
+            <Route
+              path="create-problem"
+              element={
+                <PrivateRoute>
+                  <MyProblems />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="create-problem/new"
+              element={
+                <PrivateRoute>
+                  <ProblemForm />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="create-problem/edit/:problemId"
-              element={<ProblemForm />}
+              element={
+                <PrivateRoute>
+                  <ProblemForm />
+                </PrivateRoute>
+              }
             />
           </Route>
         </Routes>
