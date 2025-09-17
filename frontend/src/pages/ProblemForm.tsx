@@ -6,7 +6,7 @@ import { useToastContext } from '../context/ToastContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MarkdownEditor from '../components/MarkdownEditor';
 
-const ProblemCreate: React.FC = () => {
+const ProblemForm: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToastContext();
   const { problemId: editProblemId } = useParams<{ problemId: string }>();
@@ -16,8 +16,21 @@ const ProblemCreate: React.FC = () => {
   const [testCaseUploading, setTestCaseUploading] = useState(false);
   const [inputFiles, setInputFiles] = useState<File[]>([]);
   const [outputFiles, setOutputFiles] = useState<File[]>([]);
+  const [lastModified, setLastModified] = useState<string | null>(null);
   const draftCreatedRef = useRef(false);
   const isEditMode = !!editProblemId;
+
+  // 서버 에러 메시지 추출 함수
+  const getErrorMessage = (error: any, defaultMessage: string) => {
+    if (error?.response?.data?.detail) {
+      return error.response.data.detail;
+    } else if (error?.response?.data?.message) {
+      return error.response.data.message;
+    } else if (error?.message) {
+      return error.message;
+    }
+    return defaultMessage;
+  };
 
   // Form state
   const [formData, setFormData] = useState<ProblemCreateRequest>({
@@ -28,6 +41,32 @@ const ProblemCreate: React.FC = () => {
     exampleTestCases: [{ input: '', output: '' }],
     testCaseUrls: [],
   });
+
+  const formatLastModified = (lastModified: string) => {
+    const now = new Date();
+    const date = new Date(lastModified);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 1) {
+      return '방금 전';
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes}분 전`;
+    } else if (diffHours < 24) {
+      return `${diffHours}시간 전`;
+    } else if (diffDays < 7) {
+      return `${diffDays}일 전`;
+    } else {
+      // 7일 이상은 정확한 날짜 표시
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+  };
 
   // Create draft problem on component mount or load existing problem for edit
   useEffect(() => {
@@ -44,6 +83,7 @@ const ProblemCreate: React.FC = () => {
             parseInt(editProblemId)
           );
           setProblemId(problem.problemId || null);
+          setLastModified(problem.lastModified || null);
           setFormData({
             title: problem.title || '',
             description: problem.description || '',
@@ -59,12 +99,14 @@ const ProblemCreate: React.FC = () => {
           const response = await problemService.createDraftProblem();
           setProblemId(response.problemId);
         }
-      } catch (error) {
-        toast.error(
+      } catch (error: any) {
+        const errorMessage = getErrorMessage(
+          error,
           isEditMode
             ? '문제 로딩 중 오류가 발생했습니다.'
             : '초안 생성 중 오류가 발생했습니다.'
         );
+        toast.error(errorMessage);
         navigate('/create-problem');
         draftCreatedRef.current = false;
       } finally {
@@ -162,7 +204,10 @@ const ProblemCreate: React.FC = () => {
     const files = event.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      const duplicates = checkDuplicateFiles(newFiles, outputFiles);
+      const duplicates = checkDuplicateFiles(newFiles, [
+        ...inputFiles,
+        ...outputFiles,
+      ]);
 
       if (duplicates.length > 0) {
         toast.error(`중복된 파일명이 있습니다: ${duplicates.join(', ')}`);
@@ -170,7 +215,7 @@ const ProblemCreate: React.FC = () => {
         return;
       }
 
-      setInputFiles(newFiles);
+      setInputFiles([...inputFiles, ...newFiles]);
     }
     event.target.value = '';
   };
@@ -182,7 +227,10 @@ const ProblemCreate: React.FC = () => {
     const files = event.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      const duplicates = checkDuplicateFiles(newFiles, inputFiles);
+      const duplicates = checkDuplicateFiles(newFiles, [
+        ...inputFiles,
+        ...outputFiles,
+      ]);
 
       if (duplicates.length > 0) {
         toast.error(`중복된 파일명이 있습니다: ${duplicates.join(', ')}`);
@@ -190,9 +238,24 @@ const ProblemCreate: React.FC = () => {
         return;
       }
 
-      setOutputFiles(newFiles);
+      setOutputFiles([...outputFiles, ...newFiles]);
     }
     event.target.value = '';
+  };
+
+  // 개별 파일 삭제 핸들러
+  const removeInputFile = (index: number) => {
+    setInputFiles(inputFiles.filter((_, i) => i !== index));
+  };
+
+  const removeOutputFile = (index: number) => {
+    setOutputFiles(outputFiles.filter((_, i) => i !== index));
+  };
+
+  // 전체 파일 취소 핸들러
+  const clearAllFiles = () => {
+    setInputFiles([]);
+    setOutputFiles([]);
   };
 
   // 테스트케이스 쌍 업로드 핸들러
@@ -251,9 +314,11 @@ const ProblemCreate: React.FC = () => {
       setOutputFiles([]);
     } catch (error: any) {
       console.error('Test case upload failed:', error);
-      toast.error(
-        error.message || '테스트케이스 업로드 중 오류가 발생했습니다.'
+      const errorMessage = getErrorMessage(
+        error,
+        '테스트케이스 업로드 중 오류가 발생했습니다.'
       );
+      toast.error(errorMessage);
     } finally {
       setTestCaseUploading(false);
     }
@@ -280,8 +345,10 @@ const ProblemCreate: React.FC = () => {
       await problemService.saveDraftProblem(problemId, formData);
       toast.success('임시 저장이 완료되었습니다!');
     } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.detail || '임시 저장 중 오류가 발생했습니다.';
+      const errorMessage = getErrorMessage(
+        error,
+        '임시 저장 중 오류가 발생했습니다.'
+      );
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -295,14 +362,38 @@ const ProblemCreate: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {isEditMode ? '문제 수정' : '새 문제 만들기'}
-        </h1>
-        <p className="mt-2 text-gray-600">
-          {isEditMode
-            ? '기존 문제의 내용을 수정하여 업데이트하세요.'
-            : '새로운 프로그래밍 문제를 생성하여 다른 사용자들과 공유하세요.'}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isEditMode ? '문제 수정' : '새 문제 만들기'}
+            </h1>
+            <p className="mt-2 text-gray-600">
+              {isEditMode
+                ? '기존 문제의 내용을 수정하여 업데이트하세요.'
+                : '새로운 프로그래밍 문제를 생성하여 다른 사용자들과 공유하세요.'}
+            </p>
+          </div>
+          {isEditMode && lastModified && (
+            <div className="flex items-center text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+              <svg
+                className="w-4 h-4 mr-1.5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              <span className="text-gray-600 font-medium">
+                마지막 수정: {formatLastModified(lastModified)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSaveDraft} className="space-y-8">
@@ -586,9 +677,18 @@ const ProblemCreate: React.FC = () => {
           {/* 선택된 파일 목록 */}
           {(inputFiles.length > 0 || outputFiles.length > 0) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">
-                선택된 파일 목록
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-medium text-gray-900">
+                  선택된 파일 목록
+                </h3>
+                <button
+                  type="button"
+                  onClick={clearAllFiles}
+                  className="text-xs text-red-600 hover:text-red-800 font-medium"
+                >
+                  전체 삭제
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className="text-xs font-medium text-blue-700 mb-2">
@@ -596,8 +696,33 @@ const ProblemCreate: React.FC = () => {
                   </h4>
                   <div className="space-y-1">
                     {inputFiles.map((file, index) => (
-                      <div key={index} className="text-xs text-gray-600">
-                        {index + 1}. {file.name}
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-xs text-gray-600 bg-white rounded px-2 py-1"
+                      >
+                        <span>
+                          {index + 1}. {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeInputFile(index)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                          title="파일 삭제"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -608,8 +733,33 @@ const ProblemCreate: React.FC = () => {
                   </h4>
                   <div className="space-y-1">
                     {outputFiles.map((file, index) => (
-                      <div key={index} className="text-xs text-gray-600">
-                        {index + 1}. {file.name}
+                      <div
+                        key={index}
+                        className="flex items-center justify-between text-xs text-gray-600 bg-white rounded px-2 py-1"
+                      >
+                        <span>
+                          {index + 1}. {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeOutputFile(index)}
+                          className="text-red-500 hover:text-red-700 ml-2"
+                          title="파일 삭제"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -626,12 +776,14 @@ const ProblemCreate: React.FC = () => {
               disabled={
                 testCaseUploading ||
                 inputFiles.length === 0 ||
-                outputFiles.length === 0
+                outputFiles.length === 0 ||
+                inputFiles.length !== outputFiles.length
               }
               className={`px-6 py-2 rounded-md text-sm font-medium ${
                 testCaseUploading ||
                 inputFiles.length === 0 ||
-                outputFiles.length === 0
+                outputFiles.length === 0 ||
+                inputFiles.length !== outputFiles.length
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-indigo-600 text-white hover:bg-indigo-700'
               }`}
@@ -663,6 +815,25 @@ const ProblemCreate: React.FC = () => {
                 '테스트케이스 업로드'
               )}
             </button>
+            {/* 파일 상태 메시지 */}
+            {inputFiles.length > 0 || outputFiles.length > 0 ? (
+              <div className="text-xs text-center mt-2">
+                {inputFiles.length === 0 ? (
+                  <span className="text-red-500">입력 파일이 필요합니다</span>
+                ) : outputFiles.length === 0 ? (
+                  <span className="text-red-500">출력 파일이 필요합니다</span>
+                ) : inputFiles.length !== outputFiles.length ? (
+                  <span className="text-yellow-600">
+                    입력 파일 {inputFiles.length}개, 출력 파일{' '}
+                    {outputFiles.length}개 - 개수가 일치하지 않습니다
+                  </span>
+                ) : (
+                  <span className="text-green-600">
+                    {inputFiles.length}쌍의 테스트케이스가 준비되었습니다
+                  </span>
+                )}
+              </div>
+            ) : null}
           </div>
 
           {/* 업로드된 테스트케이스 쌍 목록 */}
@@ -741,4 +912,4 @@ const ProblemCreate: React.FC = () => {
   );
 };
 
-export default ProblemCreate;
+export default ProblemForm;

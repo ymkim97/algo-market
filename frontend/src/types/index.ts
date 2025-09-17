@@ -45,6 +45,8 @@ export interface Problem {
   problemStatus?: ProblemStatus; // 내 문제에서만 있음
   exampleTestCases?: ExampleTestCase[]; // 상세에서만 있음
   testCaseUrls?: TestCaseUrl[]; // 내 문제에서만 있음
+  lastModified?: string; // 내 문제에서만 있음
+  solvedLanguages?: string[]; // Draft 문제에서만 있음 - 해결한 언어 목록
 }
 
 export type ProblemStatus = 'DRAFT' | 'PUBLIC';

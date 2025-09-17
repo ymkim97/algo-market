@@ -6,7 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 import Pagination from '../components/Pagination';
 
-const CreateProblem: React.FC = () => {
+const MyProblems: React.FC = () => {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +55,32 @@ const CreateProblem: React.FC = () => {
         {labels[status]}
       </span>
     );
+  };
+
+  const formatLastModified = (lastModified: string) => {
+    const now = new Date();
+    const date = new Date(lastModified);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMinutes < 1) {
+      return '방금 전';
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes}분 전`;
+    } else if (diffHours < 24) {
+      return `${diffHours}시간 전`;
+    } else if (diffDays < 7) {
+      return `${diffDays}일 전`;
+    } else {
+      // 7일 이상은 정확한 날짜 표시
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    }
   };
 
   if (loading) {
@@ -174,14 +200,140 @@ const CreateProblem: React.FC = () => {
                               getStatusBadge(problem.problemStatus)}
                           </div>
                         </div>
-                        <div className="mt-2 flex items-center text-sm text-gray-500 space-x-4">
-                          <span>제출 수: {problem.submitCount}회</span>
-                          {problem.timeLimit && (
-                            <span>시간 제한: {problem.timeLimit}초</span>
-                          )}
-                          {problem.memoryLimit && (
-                            <span>메모리 제한: {problem.memoryLimit}MB</span>
-                          )}
+                        <div className="mt-3">
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500">
+                            <div className="flex items-center">
+                              <svg
+                                className="w-4 h-4 mr-1.5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                                />
+                              </svg>
+                              <span>{problem.submitCount}회 제출</span>
+                            </div>
+                            {problem.timeLimit && (
+                              <div className="flex items-center">
+                                <svg
+                                  className="w-4 h-4 mr-1.5 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                                <span>{problem.timeLimit}초</span>
+                              </div>
+                            )}
+                            {problem.memoryLimit && (
+                              <div className="flex items-center">
+                                <svg
+                                  className="w-4 h-4 mr-1.5 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                                  />
+                                </svg>
+                                <span>{problem.memoryLimit}MB</span>
+                              </div>
+                            )}
+                            {problem.lastModified && (
+                              <div className="flex items-center">
+                                <svg
+                                  className="w-4 h-4 mr-1.5 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                                <span className="text-gray-600">
+                                  {formatLastModified(problem.lastModified)}
+                                </span>
+                              </div>
+                            )}
+                            {problem.problemStatus === 'DRAFT' && (
+                              <div className="flex items-center">
+                                <svg
+                                  className={`w-4 h-4 mr-1.5 ${
+                                    problem.solvedLanguages &&
+                                    problem.solvedLanguages.length >= 2
+                                      ? 'text-green-500'
+                                      : 'text-gray-400'
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                                <span
+                                  className={`font-medium ${
+                                    problem.solvedLanguages &&
+                                    problem.solvedLanguages.length >= 2
+                                      ? 'text-green-600'
+                                      : problem.solvedLanguages &&
+                                          problem.solvedLanguages.length > 0
+                                        ? 'text-yellow-600'
+                                        : 'text-gray-500'
+                                  }`}
+                                >
+                                  해결 언어:{' '}
+                                  {problem.solvedLanguages &&
+                                  problem.solvedLanguages.length > 0
+                                    ? problem.solvedLanguages
+                                        .map((lang) => {
+                                          const languageNames: Record<
+                                            string,
+                                            string
+                                          > = {
+                                            JAVA: 'Java',
+                                            PYTHON: 'Python',
+                                            JAVASCRIPT: 'JavaScript',
+                                            CPP: 'C++',
+                                            C: 'C',
+                                          };
+                                          return languageNames[lang] || lang;
+                                        })
+                                        .join(', ')
+                                    : '없음'}
+                                  {problem.solvedLanguages &&
+                                    problem.solvedLanguages.length > 0 && (
+                                      <span className="text-xs text-gray-500 ml-1">
+                                        ({problem.solvedLanguages.length}/2)
+                                      </span>
+                                    )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="ml-4 flex items-center space-x-2">
@@ -304,4 +456,4 @@ const CreateProblem: React.FC = () => {
   );
 };
 
-export default CreateProblem;
+export default MyProblems;
