@@ -23,8 +23,23 @@ public interface ProblemRepository extends Repository<Problem, Long> {
 
 	Optional<Problem> findByIdAndAuthorUsername(Long id, String authorUsername);
 
-	@Query("SELECT new algomarket.problemservice.application.dto.ProblemListResponse(p.number, p.title, p.submitCount) FROM Problem p WHERE p.problemStatus = algomarket.problemservice.domain.problem.ProblemStatus.PUBLIC")
+	@Query("SELECT new algomarket.problemservice.application.dto.ProblemListResponse(p.number, p.title, p.submitCount, null) FROM Problem p WHERE p.problemStatus = algomarket.problemservice.domain.problem.ProblemStatus.PUBLIC")
 	Page<ProblemListResponse> findAll(Pageable pageable);
+
+	@Query("""
+      SELECT new algomarket.problemservice.application.dto.ProblemListResponse(
+          p.number, p.title, p.submitCount,
+          CASE WHEN EXISTS (
+              SELECT 1 FROM Submission s2
+              WHERE s2.problemId = p.id
+                  AND s2.username = :username
+                  AND s2.submitStatus = 'ACCEPTED'
+          ) THEN true ELSE false END
+      )
+      FROM Problem p
+      WHERE p.problemStatus = 'PUBLIC'
+      """)
+	Page<ProblemListResponse> findAllWithSolvedStatus(Pageable pageable, String username);
 
 	@Query("SELECT p from Problem p WHERE p.authorUsername = :authorUsername")
 	Page<Problem> findAllMyProblems(Pageable pageable, String authorUsername);

@@ -42,6 +42,7 @@ export interface Problem {
   timeLimit?: number; // 상세에서만 있음 (double)
   memoryLimit?: number; // 상세에서만 있음
   submitCount: number;
+  isSolved?: boolean | null;
   problemStatus?: ProblemStatus; // 내 문제에서만 있음
   exampleTestCases?: ExampleTestCase[]; // 상세에서만 있음
   testCaseUrls?: TestCaseUrl[]; // 내 문제에서만 있음

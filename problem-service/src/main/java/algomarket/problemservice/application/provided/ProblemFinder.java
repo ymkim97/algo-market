@@ -14,6 +14,8 @@ public interface ProblemFinder {
 
 	Page<ProblemListResponse> listProblems(Integer pageNumber);
 
+	Page<ProblemListResponse> listProblemsWithSolvedStatus(Integer pageNumber, String username);
+
 	MyProblemInfoResponse findMyProblem(Long problemId, String username);
 
 	Page<MyProblemInfoResponse> listMyProblems(Integer pageNumber, String username);

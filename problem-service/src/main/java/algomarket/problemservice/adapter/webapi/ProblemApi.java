@@ -45,6 +45,13 @@ public class ProblemApi {
 		return ResponseEntity.ok(response);
 	}
 
+	@GetMapping("/with-solved")
+	public ResponseEntity<Page<ProblemListResponse>> listProblemsWithSolvedStatus(@RequestParam(value = "page", defaultValue = "0") Integer pageNumber, @CurrentUsername String username) {
+		Page<ProblemListResponse> response =  problemFinder.listProblemsWithSolvedStatus(pageNumber, username);
+
+		return ResponseEntity.ok(response);
+	}
+
 	@GetMapping("/{problemNumber}")
 	public ResponseEntity<ProblemInfoResponse> find(@PathVariable Long problemNumber) {
 		ProblemInfoResponse response = problemFinder.find(problemNumber);

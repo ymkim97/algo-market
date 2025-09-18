@@ -5,6 +5,8 @@ public record ProblemListResponse(
 
 	String title,
 
-	Integer submitCount
+	Integer submitCount,
+
+	Boolean isSolved
 ) {
 }

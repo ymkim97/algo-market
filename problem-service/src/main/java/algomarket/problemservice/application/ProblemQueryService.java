@@ -53,6 +53,11 @@ public class ProblemQueryService implements ProblemFinder {
 	}
 
 	@Override
+	public Page<ProblemListResponse> listProblemsWithSolvedStatus(Integer pageNumber, String username) {
+		return problemRepository.findAllWithSolvedStatus(PageRequest.of(pageNumber, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "number")), username);
+	}
+
+	@Override
 	public MyProblemInfoResponse findMyProblem(Long problemId, String username) {
 		Problem problem = problemRepository.findByIdAndAuthorUsername(problemId, username)
 			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제 임시 저장입니다 - ID:" + problemId));

@@ -7,11 +7,17 @@ import algomarket.problemservice.domain.submission.SubmitStatus;
 
 public record SubmitResponse(
 	Long submissionId,
+
 	Long problemId,
+
 	String username,
+
 	SubmitStatus submitStatus,
+
 	Integer runtimeMs,
+
 	Integer memoryKb,
+
 	LocalDateTime submitTime
 ) {
 

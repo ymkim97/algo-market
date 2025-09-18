@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { problemService } from '../services/problemService';
+import { authService } from '../services/authService';
+import { ProblemListResponse } from '../types';
 import ErrorMessage from '../components/ErrorMessage';
 import Pagination from '../components/Pagination';
 import ProgressBar from '../components/ProgressBar';
@@ -11,7 +13,8 @@ const ProblemList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0); // 백엔드 페이지는 0부터 시작
 
-  const [problemResponse, setProblemResponse] = useState<any>(null);
+  const [problemResponse, setProblemResponse] =
+    useState<ProblemListResponse | null>(null);
   const [loading, setLoading] = useState(true); // 초기 로딩 true로 시작
   const [error, setError] = useState<string | null>(null);
 
@@ -21,8 +24,10 @@ const ProblemList: React.FC = () => {
         setError(null);
         setLoading(true);
 
-        console.log('API call with page:', page);
-        const data = await problemService.getProblems(page, ITEMS_PER_PAGE);
+        const isLoggedIn = authService.isAuthenticated();
+        const data = isLoggedIn
+          ? await problemService.getProblemsWithSolved(page, ITEMS_PER_PAGE)
+          : await problemService.getProblems(page, ITEMS_PER_PAGE);
 
         setProblemResponse(data);
       } catch (err: any) {
@@ -75,13 +80,6 @@ const ProblemList: React.FC = () => {
       </div>
     );
   }
-
-  console.log(
-    'ProblemList render - loading:',
-    loading,
-    'problemResponse:',
-    !!problemResponse
-  );
 
   return (
     <div className="relative">
@@ -152,10 +150,23 @@ const ProblemList: React.FC = () => {
                             {problem.problemNumber}. {problem.title}
                           </p>
                         </div>
-                        <div className="ml-2 flex-shrink-0 flex space-x-2">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                            제출 {problem.submitCount}회
-                          </span>
+                        <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
+                          {problem.isSolved === true && (
+                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 text-xs font-semibold text-green-700">
+                              해결
+                            </span>
+                          )}
+                          {problem.isSolved === false && (
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-700">
+                              미해결
+                            </span>
+                          )}
+                          <div className="group relative inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                            전체 제출 {problem.submitCount}회
+                            <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] z-10 hidden w-max -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition duration-150 group-hover:block group-hover:opacity-100">
+                              모든 사용자의 제출 횟수
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </Link>

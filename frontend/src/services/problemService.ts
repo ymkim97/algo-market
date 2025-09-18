@@ -19,6 +19,16 @@ export const problemService = {
     return response;
   },
 
+  getProblemsWithSolved: async (
+    page: number = 0,
+    size: number = 20
+  ): Promise<ProblemListResponse> => {
+    const response = await api.get<ProblemListResponse>(
+      `/problems/with-solved?page=${page}&size=${size}`
+    );
+    return response;
+  },
+
   // Get problem by problemNumber
   getProblem: async (problemNumber: number): Promise<Problem> => {
     const response = await api.get<Problem>(`/problems/${problemNumber}`);
