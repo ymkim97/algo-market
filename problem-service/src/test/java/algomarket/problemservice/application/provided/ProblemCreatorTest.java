@@ -77,8 +77,8 @@ class ProblemCreatorTest {
 		String username = "username";
 
 		List<Submission> submissions = List.of(
-			Submission.submit(new SubmitRequest(problemId, "Code", Language.JAVA), username),
-			Submission.submit(new SubmitRequest(problemId, "Code", Language.PYTHON), username)
+			Submission.submit(new SubmitRequest(problemId, "Code", Language.JAVA), username, "Title"),
+			Submission.submit(new SubmitRequest(problemId, "Code", Language.PYTHON), username, "Title")
 		);
 		ReflectionTestUtils.setField(submissions.getFirst(), "submitStatus", SubmitStatus.ACCEPTED);
 		ReflectionTestUtils.setField(submissions.get(1), "submitStatus", SubmitStatus.ACCEPTED);

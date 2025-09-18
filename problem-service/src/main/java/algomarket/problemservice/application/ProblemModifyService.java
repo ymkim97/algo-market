@@ -45,7 +45,12 @@ public class ProblemModifyService implements ProblemCreator, ProblemRemover {
 		Problem problem = problemRepository.findByIdAndAuthorUsername(draftModifyRequest.problemId(), username)
 			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제입니다. - ID: " + draftModifyRequest.problemId()));
 
+		List<Submission> submissions = submissionRepository.findAllByProblemIdAndUsername(draftModifyRequest.problemId(), username);
+		submissions.forEach(submission -> submission.updateProblemTitle(draftModifyRequest.title()));
+
 		problem.modifyDraft(draftModifyRequest);
+
+		submissionRepository.saveAll(submissions);
 
 		return ProblemInfoResponse.from(problemRepository.save(problem));
 	}

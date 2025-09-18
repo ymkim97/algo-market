@@ -31,7 +31,7 @@ public class SubmissionService implements SubmissionHandler {
 
 		problem.submit();
 
-		Submission submission = Submission.submit(submitRequest, username);
+		Submission submission = Submission.submit(submitRequest, username, problem.getTitle());
 		submission = submissionRepository.save(submission);
 
 		SubmittedEvent submittedEvent = SubmittedEvent.of(submitRequest, username, submission.getId(), problem.getTimeLimitSec(), problem.getMemoryLimitMb());

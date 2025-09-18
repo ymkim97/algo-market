@@ -154,8 +154,8 @@ class ProblemApiTest {
 		var submitRequest1 = new SubmitRequest(problemId, "CODE", Language.JAVA);
 		var submitRequest2 = new SubmitRequest(problemId, "CODE", Language.PYTHON);
 
-		var submission1 = Submission.submit(submitRequest1, username);
-		var submission2 = Submission.submit(submitRequest2, username);
+		var submission1 = Submission.submit(submitRequest1, username, "Title");
+		var submission2 = Submission.submit(submitRequest2, username, "Title");
 
 		ReflectionTestUtils.setField(submission1, "submitStatus", SubmitStatus.ACCEPTED);
 		ReflectionTestUtils.setField(submission2, "submitStatus", SubmitStatus.ACCEPTED);
@@ -187,7 +187,7 @@ class ProblemApiTest {
 
 		var submitRequest1 = new SubmitRequest(problemId, "CODE", Language.JAVA);
 
-		var submission1 = Submission.submit(submitRequest1, username);
+		var submission1 = Submission.submit(submitRequest1, username, "Title");
 
 		ReflectionTestUtils.setField(submission1, "submitStatus", SubmitStatus.ACCEPTED);
 

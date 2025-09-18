@@ -10,6 +10,8 @@ public interface ProblemFinder {
 
 	ProblemInfoResponse find(Long problemNumber);
 
+	ProblemInfoResponse findByTitle(String title);
+
 	Page<ProblemListResponse> listProblems(Integer pageNumber);
 
 	MyProblemInfoResponse findMyProblem(Long problemId, String username);

@@ -107,7 +107,7 @@ class ProblemModifyServiceConcurrencyTest {
 
 	private Submission createSuccessfulSubmission(Long problemId, String username, Language language) {
 		SubmitRequest submitRequest = new SubmitRequest(problemId, "test code", language);
-		Submission submission = Submission.submit(submitRequest, username);
+		Submission submission = Submission.submit(submitRequest, username, "Title");
 		submission.updateStatus(SubmitStatus.ACCEPTED, 100, 1024);
 		return submission;
 	}

@@ -31,14 +31,14 @@ export const submissionService = {
   },
 
   // Get user's submissions
-  getUserSubmissions: async (
+  getUserSubmissionsPage: async (
     page: number = 0,
-    size: number = 20
-  ): Promise<Submission[]> => {
-    const response = await api.get<ApiResponse<Submission[]>>(
-      `/submissions/my?page=${page}&size=${size}`
+    size: number = 10
+  ): Promise<PageResponse<SubmissionHistoryForProblem>> => {
+    const response = await api.get<PageResponse<SubmissionHistoryForProblem>>(
+      `/submissions?page=${page}&size=${size}`
     );
-    return response.data;
+    return response;
   },
 
   // Get submissions for a problem

@@ -159,6 +159,7 @@ export interface SubmissionHistoryForProblem {
   runtimeMs: number | null;
   memoryKb: number | null;
   submitTime: string;
+  problemTitle: string;
 }
 
 // Image Upload Types

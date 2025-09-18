@@ -26,6 +26,8 @@ public class Submission {
 	@Column(nullable = false)
 	private Long problemId;
 
+	private String problemTitle;
+
 	@Column(nullable = false, length = 20)
 	private String username;
 
@@ -47,9 +49,10 @@ public class Submission {
 
 	private Integer memoryKb;
 
-	public static Submission submit(SubmitRequest submitRequest, String username) {
+	public static Submission submit(SubmitRequest submitRequest, String username, String problemTitle) {
 		Submission submission = new Submission();
 
+		submission.problemTitle = problemTitle;
 		submission.username = username;
 		submission.problemId = submitRequest.problemId();
 		submission.sourceCode = submitRequest.sourceCode();
@@ -77,5 +80,9 @@ public class Submission {
 
 	public boolean isSolved() {
 		return submitStatus == SubmitStatus.ACCEPTED;
+	}
+
+	public void updateProblemTitle(String problemTitle) {
+		this.problemTitle = problemTitle;
 	}
 }

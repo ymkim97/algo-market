@@ -21,4 +21,9 @@ public class SubmissionQueryService implements SubmissionFinder {
 		return submissionRepository.findHistoryForProblem(
 			PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "submitTime")), problemId, username);
 	}
+
+	@Override
+	public Page<SubmissionHistoryForProblemResponse> findAll(Integer pageNumber, Integer pageSize, String username) {
+		return submissionRepository.findAllForHistory(PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.DESC, "submitTime")), username);
+	}
 }

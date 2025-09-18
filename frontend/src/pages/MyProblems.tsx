@@ -6,9 +6,11 @@ import ProgressBar from '../components/ProgressBar';
 import ErrorMessage from '../components/ErrorMessage';
 import Pagination from '../components/Pagination';
 import { useToastContext } from '../context/ToastContext';
+import { authService } from '../services/authService';
 
 const MyProblems: React.FC = () => {
   const { success, error: showError } = useToastContext();
+  const isAuthenticated = authService.isAuthenticated();
   const [problems, setProblems] = useState<Problem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +24,13 @@ const MyProblems: React.FC = () => {
   );
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     loadMyProblems(currentPage);
-  }, [currentPage]);
+  }, [currentPage, isAuthenticated]);
 
   const loadMyProblems = async (page: number) => {
     try {
@@ -140,6 +147,37 @@ const MyProblems: React.FC = () => {
       });
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        <ProgressBar loading={false} />
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-8 py-12 text-center shadow-sm">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            문제를 출제하려면 로그인해 주세요
+          </h1>
+          <p className="mt-3 text-sm text-gray-600">
+            작성 중인 문제 목록과 새 문제 만들기 기능은 로그인한 사용자만 사용할
+            수 있습니다.
+          </p>
+          <div className="mt-6 flex justify-center space-x-3">
+            <Link
+              to="/login"
+              className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-indigo-700"
+            >
+              로그인
+            </Link>
+            <Link
+              to="/signup"
+              className="inline-flex items-center rounded-md border border-indigo-600 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50"
+            >
+              회원가입
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

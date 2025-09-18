@@ -19,6 +19,8 @@ public interface ProblemRepository extends Repository<Problem, Long> {
 
 	Optional<Problem> findByNumber(Long problemNumber);
 
+	Optional<Problem> findByTitle(String title);
+
 	Optional<Problem> findByIdAndAuthorUsername(Long id, String authorUsername);
 
 	@Query("SELECT new algomarket.problemservice.application.dto.ProblemListResponse(p.number, p.title, p.submitCount) FROM Problem p WHERE p.problemStatus = algomarket.problemservice.domain.problem.ProblemStatus.PUBLIC")

@@ -14,7 +14,8 @@ public record SubmissionHistoryForProblemResponse(
 	Language language,
 	Integer runtimeMs,
 	Integer memoryKb,
-	LocalDateTime submitTime
+	LocalDateTime submitTime,
+	String problemTitle
 ) {
 
 }

@@ -7,4 +7,6 @@ import algomarket.problemservice.application.dto.SubmissionHistoryForProblemResp
 public interface SubmissionFinder {
 
 	Page<SubmissionHistoryForProblemResponse> findSubmittedForProblem(Integer pageNumber, Integer pageSize, Long problemId, String username);
+
+	Page<SubmissionHistoryForProblemResponse> findAll(Integer pageNumber, Integer pageSize, String username);
 }

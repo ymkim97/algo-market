@@ -212,13 +212,13 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
                     <td className="px-4 py-3 text-sm text-black-500">
                       {submission.runtimeMs !== undefined &&
                       submission.runtimeMs !== null
-                        ? `${submission.runtimeMs}ms`
+                        ? `${submission.runtimeMs} ms`
                         : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-black-500">
                       {submission.memoryKb !== undefined &&
                       submission.memoryKb !== null
-                        ? `${submission.memoryKb}KB`
+                        ? `${submission.memoryKb} KB`
                         : '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">

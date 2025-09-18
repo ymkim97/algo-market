@@ -29,6 +29,7 @@ const Layout: React.FC = () => {
               {[
                 { label: '문제 목록', to: '/problems' },
                 { label: '출제하기', to: '/create-problem' },
+                { label: '내 제출', to: '/submissions' },
               ].map((item) => {
                 const isActive = location.pathname.startsWith(item.to);
                 return (

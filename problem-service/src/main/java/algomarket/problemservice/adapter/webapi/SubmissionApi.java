@@ -53,4 +53,11 @@ public class SubmissionApi {
 
 		return ResponseEntity.ok(responses);
 	}
+
+	@GetMapping
+	public ResponseEntity<Page<SubmissionHistoryForProblemResponse>> find(@RequestParam Integer page, @RequestParam Integer size, @CurrentUsername String username) {
+		Page<SubmissionHistoryForProblemResponse> responses = submissionFinder.findAll(page, size, username);
+
+		return ResponseEntity.ok(responses);
+	}
 }

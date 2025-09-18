@@ -40,6 +40,14 @@ public class ProblemQueryService implements ProblemFinder {
 	}
 
 	@Override
+	public ProblemInfoResponse findByTitle(String title) {
+		Problem problem = problemRepository.findByTitle(title)
+			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제 제목입니다 - Title:" + title));
+
+		return ProblemInfoResponse.from(problem);
+	}
+
+	@Override
 	public Page<ProblemListResponse> listProblems(Integer pageNumber) {
 		return problemRepository.findAll(PageRequest.of(pageNumber, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "number")));
 	}

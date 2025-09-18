@@ -16,6 +16,8 @@ public interface SubmissionRepository extends Repository<Submission, Long> {
 
 	Submission save(Submission submission);
 
+	void saveAll(Iterable<Submission> submissions);
+
 	Optional<Submission> findById(Long id);
 
 	Boolean existsByUsernameAndIdAndSubmitStatus(String username, Long id,  SubmitStatus status);
@@ -25,7 +27,11 @@ public interface SubmissionRepository extends Repository<Submission, Long> {
 	@Query("SELECT s.problemId, s.language FROM Submission s WHERE s.problemId IN :problemId AND s.submitStatus = algomarket.problemservice.domain.submission.SubmitStatus.ACCEPTED")
 	List<Object[]> findSolvedLanguagesForDraftByProblemId(List<Long> problemId);
 
-	@Query("SELECT new algomarket.problemservice.application.dto.SubmissionHistoryForProblemResponse(s.id, s.problemId, s.username, s.submitStatus, s.sourceCode, s.language, s.runtimeMs, s.memoryKb, s.submitTime) "
+	@Query("SELECT new algomarket.problemservice.application.dto.SubmissionHistoryForProblemResponse(s.id, s.problemId, s.username, s.submitStatus, s.sourceCode, s.language, s.runtimeMs, s.memoryKb, s.submitTime, null) "
 		+ "FROM Submission s WHERE s.problemId = :problemId AND s.username = :username")
 	Page<SubmissionHistoryForProblemResponse> findHistoryForProblem(Pageable pageable, Long problemId, String username);
+
+	@Query("SELECT new algomarket.problemservice.application.dto.SubmissionHistoryForProblemResponse(s.id, s.problemId, s.username, s.submitStatus, s.sourceCode, s.language, s.runtimeMs, s.memoryKb, s.submitTime, s.problemTitle) "
+		+ "FROM Submission s WHERE s.username = :username")
+	Page<SubmissionHistoryForProblemResponse> findAllForHistory(Pageable pageable, String username);
 }

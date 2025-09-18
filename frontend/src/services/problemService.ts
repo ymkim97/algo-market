@@ -25,6 +25,14 @@ export const problemService = {
     return response;
   },
 
+  // Get problem by title
+  getProblemByTitle: async (problemTitle: string): Promise<Problem> => {
+    const response = await api.get<Problem>(
+      `/problems/title/${encodeURIComponent(problemTitle)}`
+    );
+    return response;
+  },
+
   // Search problems (백엔드에서 지원하는 경우)
   searchProblems: async (
     query: string,

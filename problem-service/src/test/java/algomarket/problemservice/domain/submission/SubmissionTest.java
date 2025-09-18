@@ -12,7 +12,7 @@ class SubmissionTest {
 	void submit() {
 		var request = new SubmitRequest(1L, "import java.util.*;", Language.JAVA);
 
-		Submission submission = Submission.submit(request, "username");
+		Submission submission = Submission.submit(request, "username", "Title");
 
 		assertThat(submission.getSubmitStatus()).isEqualTo(SubmitStatus.JUDGING);
 		assertThat(submission.getSubmitTime()).isNotNull();
@@ -23,8 +23,8 @@ class SubmissionTest {
 	@Test
 	void updateStatus() {
 		var request = new SubmitRequest(1L, "import java.util.*;", Language.JAVA);
-		Submission submission1 = Submission.submit(request, "username");
-		Submission submission2 = Submission.submit(request, "username");
+		Submission submission1 = Submission.submit(request, "username", "Title");
+		Submission submission2 = Submission.submit(request, "username", "Title");
 
 		submission1.updateStatus(SubmitStatus.ACCEPTED, 1, 300);
 		submission2.updateStatus(SubmitStatus.JUDGING, 1, 300);
