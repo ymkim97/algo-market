@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProblemQueryService implements ProblemFinder {
 
-	private final int PAGE_SIZE = 10;
+	private final int PAGE_SIZE = 12;
 
 	private final ProblemRepository problemRepository;
 	private final SubmissionRepository submissionRepository;

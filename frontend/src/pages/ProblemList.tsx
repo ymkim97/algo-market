@@ -135,51 +135,55 @@ const ProblemList: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
-            {filteredProblems && filteredProblems.length > 0
-              ? filteredProblems.map((problem: any, index: number) => (
-                  <li key={`${problem.problemNumber}-${index}`}>
-                    <Link
-                      to={`/problems/${problem.problemNumber}`}
-                      className="block px-4 py-4 sm:px-6 hover:bg-gray-50"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <p className="text-sm font-medium text-indigo-600 truncate">
-                            {problem.problemNumber}. {problem.title}
-                          </p>
-                        </div>
-                        <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
-                          {problem.isSolved === true && (
-                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 text-xs font-semibold text-green-700">
-                              해결
-                            </span>
-                          )}
-                          {problem.isSolved === false && (
-                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 text-xs font-semibold text-amber-700">
-                              미해결
-                            </span>
-                          )}
-                          <div className="group relative inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
-                            전체 제출 {problem.submitCount}회
-                            <span className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] z-10 hidden w-max -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition duration-150 group-hover:block group-hover:opacity-100">
-                              모든 사용자의 제출 횟수
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
-                ))
-              : // 로딩 중이 아닐 때만 "등록된 문제가 없습니다" 표시
-                !loading && (
-                  <li className="px-4 py-8 text-center text-gray-500">
-                    등록된 문제가 없습니다.
-                  </li>
-                )}
-          </ul>
-        </div>
+        {filteredProblems && filteredProblems.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProblems.map((problem: any, index: number) => (
+              <Link
+                key={`${problem.problemNumber}-${index}`}
+                to={`/problems/${problem.problemNumber}`}
+                className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-transform duration-150 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-lg"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                      문제 {problem.problemNumber}
+                    </p>
+                    <h2 className="mt-2 line-clamp-2 text-base font-semibold text-gray-900 group-hover:text-indigo-600">
+                      {problem.title}
+                    </h2>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {problem.isSolved === true && (
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                        해결됨
+                      </span>
+                    )}
+                    {problem.isSolved === false && (
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        미해결
+                      </span>
+                    )}
+                    <div className="group/tooltip relative inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                      전체 제출 {problem.submitCount}회
+                      <span className="pointer-events-none absolute left-1/2 top-[calc(100%+6px)] z-10 hidden w-max -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-[10px] font-medium text-white opacity-0 shadow-lg transition duration-150 group-hover/tooltip:block group-hover/tooltip:opacity-100">
+                        모든 사용자의 전체 제출 횟수
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-6 flex flex-1 items-end justify-between text-xs text-slate-500">
+                  <span>자세히 보기 →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          !loading && (
+            <div className="rounded-2xl border border-dashed border-gray-200 py-10 text-center text-gray-500">
+              등록된 문제가 없습니다.
+            </div>
+          )
+        )}
 
         {/* 페이지네이션 */}
         {totalElements > 0 && (
