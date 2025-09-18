@@ -1,4 +1,10 @@
-import { ApiResponse, Submission, SubmitResponse } from '../types';
+import {
+  ApiResponse,
+  PageResponse,
+  Submission,
+  SubmissionHistoryForProblem,
+  SubmitResponse,
+} from '../types';
 import api from './api';
 
 export const submissionService = {
@@ -40,11 +46,11 @@ export const submissionService = {
     problemId: number,
     page: number = 0,
     size: number = 20
-  ): Promise<Submission[]> => {
-    const response = await api.get<ApiResponse<Submission[]>>(
-      `/problems/${problemId}/submissions?page=${page}&size=${size}`
+  ): Promise<PageResponse<SubmissionHistoryForProblem>> => {
+    const response = await api.get<PageResponse<SubmissionHistoryForProblem>>(
+      `/submissions/history/${problemId}?page=${page}&size=${size}`
     );
-    return response.data;
+    return response;
   },
 
   // Create an SSE connection for real-time progress

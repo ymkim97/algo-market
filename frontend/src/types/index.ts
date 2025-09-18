@@ -94,6 +94,18 @@ export interface Example {
 }
 
 // Submission Types
+export interface SubmitResponse {
+  submissionId: number;
+  problemId: number;
+  username: string;
+  submitStatus: SubmissionStatus;
+  runtimeMs?: number;
+  memoryKb?: number;
+  submitTime: string;
+}
+
+export type Language = 'JAVA' | 'PYTHON' | string;
+
 export interface Submission {
   id: number;
   problemId: number;
@@ -104,16 +116,6 @@ export interface Submission {
   createdAt: string;
   executionTime?: number;
   memoryUsage?: number;
-}
-
-export interface SubmitResponse {
-  submissionId: number;
-  problemId: number;
-  username: string;
-  submitStatus: SubmissionStatus;
-  runtimeMs?: number;
-  memoryKb?: number;
-  submitTime: string;
 }
 
 export type SubmissionStatus =
@@ -145,6 +147,18 @@ export interface CompletedEvent {
   username: string;
   finalStatus: SubmissionStatus;
   timeStamp: string;
+}
+
+export interface SubmissionHistoryForProblem {
+  submissionId: number;
+  problemId: number;
+  username: string;
+  submitStatus: SubmissionStatus;
+  sourceCode: string;
+  language: Language;
+  runtimeMs: number | null;
+  memoryKb: number | null;
+  submitTime: string;
 }
 
 // Image Upload Types

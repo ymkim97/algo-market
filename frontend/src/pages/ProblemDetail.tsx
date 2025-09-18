@@ -5,6 +5,7 @@ import { submissionService } from '../services/submissionService';
 import { useAsync } from '../hooks/useAsync';
 import { useToastContext } from '../context/ToastContext';
 import {
+  SubmissionHistoryForProblem,
   SubmitResponse,
   SubmissionStatus,
   ProgressEvent,
@@ -14,6 +15,10 @@ import ErrorMessage from '../components/ErrorMessage';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProgressBar from '../components/ProgressBar';
 import Editor from '@monaco-editor/react';
+import SubmissionHistoryList from '../components/SubmissionHistoryList';
+import { getSubmissionStatusMeta } from '../utils/submissionStatus';
+
+const HISTORY_PAGE_SIZE = 10;
 
 const ProblemDetail: React.FC = () => {
   const { problemId } = useParams<{ problemId: string }>();
@@ -82,82 +87,76 @@ if __name__ == "__main__":
   const toast = useToastContext();
 
   const code = codeByLanguage[language];
+  const [activeResultTab, setActiveResultTab] = useState<'result' | 'history'>(
+    'result'
+  );
+  const [historySubmissions, setHistorySubmissions] = useState<
+    SubmissionHistoryForProblem[]
+  >([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historyTotalPages, setHistoryTotalPages] = useState(0);
+  const historyRequestPageRef = React.useRef(0);
 
-  // 제출 상태별 스타일 및 텍스트
-  const getStatusDisplay = (status: SubmissionStatus) => {
-    switch (status) {
-      case 'PENDING':
-        return {
-          text: '대기 중',
-          bgColor: 'bg-gray-100',
-          textColor: 'text-gray-800',
-          icon: '⏳',
-        };
-      case 'JUDGING':
-        return {
-          text: '채점 중',
-          bgColor: 'bg-blue-100',
-          textColor: 'text-blue-800',
-          icon: 'spinner',
-        };
-      case 'ACCEPTED':
-        return {
-          text: '정답',
-          bgColor: 'bg-green-100',
-          textColor: 'text-green-800',
-          icon: '✅',
-        };
-      case 'WRONG_ANSWER':
-        return {
-          text: '틀렸습니다',
-          bgColor: 'bg-red-100',
-          textColor: 'text-red-800',
-          icon: '❌',
-        };
-      case 'TIME_LIMIT_EXCEEDED':
-        return {
-          text: '시간 초과',
-          bgColor: 'bg-yellow-100',
-          textColor: 'text-yellow-800',
-          icon: '⏰',
-        };
-      case 'MEMORY_LIMIT_EXCEEDED':
-        return {
-          text: '메모리 초과',
-          bgColor: 'bg-orange-100',
-          textColor: 'text-orange-800',
-          icon: '💾',
-        };
-      case 'RUNTIME_ERROR':
-        return {
-          text: '런타임 에러',
-          bgColor: 'bg-purple-100',
-          textColor: 'text-purple-800',
-          icon: '🚫',
-        };
-      case 'COMPILE_ERROR':
-        return {
-          text: '컴파일 에러',
-          bgColor: 'bg-pink-100',
-          textColor: 'text-pink-800',
-          icon: '🔧',
-        };
-      case 'SERVER_ERROR':
-        return {
-          text: '서버 에러',
-          bgColor: 'bg-gray-100',
-          textColor: 'text-gray-800',
-          icon: '⚠️',
-        };
-      default:
-        return {
-          text: '알 수 없음',
-          bgColor: 'bg-gray-100',
-          textColor: 'text-gray-800',
-          icon: '❓',
-        };
-    }
-  };
+  const loadHistory = React.useCallback(
+    async (pageToLoad: number) => {
+      if (historyLoading) {
+        return;
+      }
+
+      historyRequestPageRef.current = pageToLoad;
+
+      const fallbackProblemId = Number(problemId);
+      const targetProblemId = actualProblemId ?? fallbackProblemId;
+
+      if (!targetProblemId || Number.isNaN(targetProblemId)) {
+        return;
+      }
+
+      setHistoryLoading(true);
+      setHistoryError(null);
+
+      try {
+        const pageResult = await submissionService.getProblemSubmissions(
+          targetProblemId,
+          pageToLoad,
+          HISTORY_PAGE_SIZE
+        );
+
+        setHistorySubmissions(pageResult.content);
+        setHistoryPage(pageResult.page.number);
+        setHistoryTotalPages(pageResult.page.totalPages);
+        historyRequestPageRef.current = pageResult.page.number;
+      } catch (err: any) {
+        const message =
+          err?.response?.data?.message ||
+          err?.message ||
+          '제출 기록을 불러오는 중 오류가 발생했습니다.';
+        setHistoryError(message);
+      } finally {
+        setHistoryLoading(false);
+      }
+    },
+    [actualProblemId, problemId, historyLoading]
+  );
+
+  const handleResultTabSelect = React.useCallback(() => {
+    setActiveResultTab('result');
+  }, []);
+
+  const handleHistoryTabSelect = React.useCallback(() => {
+    setActiveResultTab('history');
+    loadHistory(0);
+  }, [loadHistory]);
+
+  React.useEffect(() => {
+    setHistorySubmissions([]);
+    setHistoryPage(0);
+    setHistoryTotalPages(0);
+    setHistoryError(null);
+    historyRequestPageRef.current = 0;
+  }, [actualProblemId, problemId]);
 
   // 코드 변경 핸들러
   const handleCodeChange = (newCode: string) => {
@@ -457,6 +456,16 @@ if __name__ == "__main__":
         startProgressEventSource(submission.submissionId);
       }
 
+      if (activeResultTab === 'history') {
+        loadHistory(0);
+      } else {
+        setHistorySubmissions([]);
+        setHistoryPage(0);
+        setHistoryTotalPages(0);
+        setHistoryError(null);
+        historyRequestPageRef.current = 0;
+      }
+
       toast.success('코드가 제출되었습니다!');
     } catch (error: any) {
       console.error('Submit error:', error);
@@ -714,203 +723,243 @@ if __name__ == "__main__":
             className="bg-white shadow sm:rounded-lg p-6 overflow-y-auto"
             style={{ height: `${100 - topPanelHeight}%` }}
           >
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">결과</h3>
+            <div className="mb-4 border-b border-gray-200">
+              <nav
+                className="-mb-px flex space-x-4"
+                aria-label="결과 및 제출 내역"
+              >
+                <button
+                  type="button"
+                  onClick={handleResultTabSelect}
+                  className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors duration-150 ${
+                    activeResultTab === 'result'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  결과
+                </button>
+                <button
+                  type="button"
+                  onClick={handleHistoryTabSelect}
+                  className={`px-1 py-2 text-sm font-medium border-b-2 transition-colors duration-150 ${
+                    activeResultTab === 'history'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  내 제출
+                </button>
+              </nav>
             </div>
 
-            {lastSubmission ? (
-              <div className="space-y-4">
-                {/* 채점 상태 카드 */}
-                <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                  <div className="p-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-lg">
-                          <svg
-                            className="w-5 h-5 text-indigo-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900">
-                            채점 결과
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            코드 실행 결과
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">
-                          제출 ID: #{lastSubmission.submissionId} | 제출자:{' '}
-                          {lastSubmission.username}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    {(() => {
-                      const statusDisplay = getStatusDisplay(
-                        lastSubmission.submitStatus
-                      );
-                      return (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            {statusDisplay.icon === 'spinner' ? (
-                              <LoadingSpinner size="sm" />
-                            ) : (
-                              <span className="text-2xl">
-                                {statusDisplay.icon}
-                              </span>
-                            )}
-                            <div>
-                              <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusDisplay.bgColor} ${statusDisplay.textColor}`}
-                              >
-                                {statusDisplay.text}
-                                {(lastSubmission.submitStatus === 'JUDGING' ||
-                                  lastSubmission.submitStatus === 'PENDING') &&
-                                  progressEvent && (
-                                    <span className="ml-2 font-bold">
-                                      {progressEvent.progressPercent}%
-                                    </span>
-                                  )}
-                              </span>
-                            </div>
+            {activeResultTab === 'result' ? (
+              lastSubmission ? (
+                <div className="space-y-4">
+                  {/* 채점 상태 카드 */}
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <div className="p-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-center w-10 h-10 bg-indigo-100 rounded-lg">
+                            <svg
+                              className="w-5 h-5 text-indigo-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                              />
+                            </svg>
                           </div>
-                          <div className="text-right">
-                            <p className="text-xs text-gray-500">제출 시간</p>
-                            <p className="text-sm font-medium text-gray-900">
-                              {new Date(
-                                lastSubmission.submitTime
-                              ).toLocaleString('ko-KR')}
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              채점 결과
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              코드 실행 결과
                             </p>
                           </div>
                         </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {/* 성능 정보 카드 */}
-                {(lastSubmission.runtimeMs !== undefined ||
-                  lastSubmission.memoryKb !== undefined) && (
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-                    <div className="p-4 border-b border-gray-200">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
-                          <svg
-                            className="w-5 h-5 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 10V3L4 14h7v7l9-11h-7z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900">
-                            성능 정보
-                          </h4>
+                        <div className="text-right">
                           <p className="text-sm text-gray-500">
-                            실행 시간 및 메모리 사용량
+                            제출 ID: #{lastSubmission.submissionId} | 제출자:{' '}
+                            {lastSubmission.username}
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="p-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        {lastSubmission.runtimeMs !== undefined && (
-                          <div className="bg-blue-50 rounded-lg p-3">
-                            <div className="flex items-center space-x-2">
-                              <svg
-                                className="w-4 h-4 text-blue-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                              </svg>
-                              <span className="text-xs font-medium text-blue-700">
-                                실행 시간
-                              </span>
+                      {(() => {
+                        const statusMeta = getSubmissionStatusMeta(
+                          lastSubmission.submitStatus
+                        );
+                        return (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              {statusMeta.icon === 'spinner' ? (
+                                <LoadingSpinner size="sm" />
+                              ) : (
+                                <span className="text-2xl">
+                                  {statusMeta.icon}
+                                </span>
+                              )}
+                              <div>
+                                <span
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusMeta.bgColor} ${statusMeta.textColor}`}
+                                >
+                                  {statusMeta.text}
+                                  {(lastSubmission.submitStatus === 'JUDGING' ||
+                                    lastSubmission.submitStatus ===
+                                      'PENDING') &&
+                                    progressEvent && (
+                                      <span className="ml-2 font-bold">
+                                        {progressEvent.progressPercent}%
+                                      </span>
+                                    )}
+                                </span>
+                              </div>
                             </div>
-                            <p className="mt-1 text-lg font-bold text-blue-900">
-                              {lastSubmission.runtimeMs}ms
-                            </p>
-                          </div>
-                        )}
-                        {lastSubmission.memoryKb !== undefined && (
-                          <div className="bg-purple-50 rounded-lg p-3">
-                            <div className="flex items-center space-x-2">
-                              <svg
-                                className="w-4 h-4 text-purple-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-                                />
-                              </svg>
-                              <span className="text-xs font-medium text-purple-700">
-                                메모리
-                              </span>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">제출 시간</p>
+                              <p className="text-sm font-medium text-gray-900">
+                                {new Date(
+                                  lastSubmission.submitTime
+                                ).toLocaleString('ko-KR')}
+                              </p>
                             </div>
-                            <p className="mt-1 text-lg font-bold text-purple-900">
-                              {lastSubmission.memoryKb}KB
-                            </p>
                           </div>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </div>
                   </div>
-                )}
 
-                {/* 에러 상태일 때 추가 정보 */}
-                {(
-                  ['COMPILE_ERROR', 'RUNTIME_ERROR'] as SubmissionStatus[]
-                ).includes(lastSubmission.submitStatus) && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <h5 className="text-sm font-medium text-red-700 mb-2">
-                      {lastSubmission.submitStatus === 'COMPILE_ERROR'
-                        ? '컴파일 오류'
-                        : '런타임 오류'}
-                    </h5>
-                    <p className="text-sm text-red-600">
-                      {lastSubmission.submitStatus === 'COMPILE_ERROR'
-                        ? '코드를 컴파일하는 중에 오류가 발생했습니다. 문법을 다시 확인해보세요.'
-                        : '코드 실행 중에 오류가 발생했습니다. 런타임 에러를 확인해보세요.'}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  {/* 성능 정보 카드 */}
+                  {(lastSubmission.runtimeMs !== undefined ||
+                    lastSubmission.memoryKb !== undefined) && (
+                    <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+                      <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg">
+                            <svg
+                              className="w-5 h-5 text-green-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              성능 정보
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              실행 시간 및 메모리 사용량
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          {lastSubmission.runtimeMs !== undefined && (
+                            <div className="bg-blue-50 rounded-lg p-3">
+                              <div className="flex items-center space-x-2">
+                                <svg
+                                  className="w-4 h-4 text-blue-600"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                                <span className="text-xs font-medium text-blue-700">
+                                  실행 시간
+                                </span>
+                              </div>
+                              <p className="mt-1 text-lg font-bold text-blue-900">
+                                {lastSubmission.runtimeMs}ms
+                              </p>
+                            </div>
+                          )}
+                          {lastSubmission.memoryKb !== undefined && (
+                            <div className="bg-purple-50 rounded-lg p-3">
+                              <div className="flex items-center space-x-2">
+                                <svg
+                                  className="w-4 h-4 text-purple-600"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                                  />
+                                </svg>
+                                <span className="text-xs font-medium text-purple-700">
+                                  메모리
+                                </span>
+                              </div>
+                              <p className="mt-1 text-lg font-bold text-purple-900">
+                                {lastSubmission.memoryKb}KB
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 에러 상태일 때 추가 정보 */}
+                  {(
+                    ['COMPILE_ERROR', 'RUNTIME_ERROR'] as SubmissionStatus[]
+                  ).includes(lastSubmission.submitStatus) && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <h5 className="text-sm font-medium text-red-700 mb-2">
+                        {lastSubmission.submitStatus === 'COMPILE_ERROR'
+                          ? '컴파일 오류'
+                          : '런타임 오류'}
+                      </h5>
+                      <p className="text-sm text-red-600">
+                        {lastSubmission.submitStatus === 'COMPILE_ERROR'
+                          ? '코드를 컴파일하는 중에 오류가 발생했습니다. 문법을 다시 확인해보세요.'
+                          : '코드 실행 중에 오류가 발생했습니다. 런타임 에러를 확인해보세요.'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-gray-500 text-center py-8">
+                  코드를 제출하면 여기에 결과가 표시됩니다.
+                </div>
+              )
             ) : (
-              <div className="text-gray-500 text-center py-8">
-                코드를 제출하면 여기에 결과가 표시됩니다.
-              </div>
+              <SubmissionHistoryList
+                submissions={historySubmissions}
+                loading={historyLoading}
+                error={historyError}
+                onRetry={() => loadHistory(historyRequestPageRef.current)}
+                currentPage={historyPage}
+                totalPages={historyTotalPages}
+                onPageChange={(page) => loadHistory(page)}
+                selectedSubmissionId={lastSubmission?.submissionId ?? null}
+              />
             )}
           </div>
         </div>
