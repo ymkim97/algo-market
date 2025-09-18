@@ -2,6 +2,7 @@ package algomarket.problemservice.adapter.webapi;
 
 import java.net.URI;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import algomarket.problemservice.application.dto.SubmissionHistoryForProblemResponse;
 import algomarket.problemservice.application.dto.SubmitResponse;
 import algomarket.problemservice.application.provided.ProgressStreamer;
+import algomarket.problemservice.application.provided.SubmissionFinder;
 import algomarket.problemservice.application.provided.SubmissionHandler;
 import algomarket.problemservice.domain.submission.SubmitRequest;
 import jakarta.validation.Valid;
@@ -27,6 +30,7 @@ public class SubmissionApi {
 
 	private final SubmissionHandler submissionHandler;
 	private final ProgressStreamer progressStreamer;
+	private final SubmissionFinder submissionFinder;
 
 	@PostMapping
 	public ResponseEntity<SubmitResponse> submit(@RequestBody @Valid SubmitRequest submitRequest, @CurrentUsername String username) {
@@ -40,5 +44,13 @@ public class SubmissionApi {
 		SseEmitter emitter = progressStreamer.subscribeSubmissionProgress(username, submissionId);
 
 		return ResponseEntity.ok(emitter);
+	}
+
+	@GetMapping("/history/{problemId}")
+	public ResponseEntity<Page<SubmissionHistoryForProblemResponse>> findHistory(@PathVariable("problemId") Long problemId,
+		@RequestParam Integer page, @RequestParam Integer size, @CurrentUsername String username) {
+		Page<SubmissionHistoryForProblemResponse> responses = submissionFinder.findSubmittedForProblem(page, size, problemId, username);
+
+		return ResponseEntity.ok(responses);
 	}
 }
