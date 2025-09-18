@@ -98,6 +98,9 @@ if __name__ == "__main__":
   const [historyPage, setHistoryPage] = useState(0);
   const [historyTotalPages, setHistoryTotalPages] = useState(0);
   const historyRequestPageRef = React.useRef(0);
+  const [expandedSubmissionId, setExpandedSubmissionId] = useState<
+    number | null
+  >(null);
 
   const loadHistory = React.useCallback(
     async (pageToLoad: number) => {
@@ -124,6 +127,7 @@ if __name__ == "__main__":
           HISTORY_PAGE_SIZE
         );
 
+        setExpandedSubmissionId(null);
         setHistorySubmissions(pageResult.content);
         setHistoryPage(pageResult.page.number);
         setHistoryTotalPages(pageResult.page.totalPages);
@@ -143,6 +147,7 @@ if __name__ == "__main__":
 
   const handleResultTabSelect = React.useCallback(() => {
     setActiveResultTab('result');
+    setExpandedSubmissionId(null);
   }, []);
 
   const handleHistoryTabSelect = React.useCallback(() => {
@@ -156,6 +161,7 @@ if __name__ == "__main__":
     setHistoryTotalPages(0);
     setHistoryError(null);
     historyRequestPageRef.current = 0;
+    setExpandedSubmissionId(null);
   }, [actualProblemId, problemId]);
 
   // 코드 변경 핸들러
@@ -959,6 +965,8 @@ if __name__ == "__main__":
                 totalPages={historyTotalPages}
                 onPageChange={(page) => loadHistory(page)}
                 selectedSubmissionId={lastSubmission?.submissionId ?? null}
+                expandedSubmissionId={expandedSubmissionId}
+                onToggleExpand={setExpandedSubmissionId}
               />
             )}
           </div>

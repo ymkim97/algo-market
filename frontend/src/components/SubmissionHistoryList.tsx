@@ -3,6 +3,7 @@ import { SubmissionHistoryForProblem } from '../types';
 import ErrorMessage from './ErrorMessage';
 import LoadingSpinner from './LoadingSpinner';
 import { getSubmissionStatusMeta } from '../utils/submissionStatus';
+import IconButton from './IconButton';
 
 interface SubmissionHistoryListProps {
   submissions: SubmissionHistoryForProblem[];
@@ -13,6 +14,8 @@ interface SubmissionHistoryListProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   selectedSubmissionId?: number | null;
+  expandedSubmissionId?: number | null;
+  onToggleExpand?: (submissionId: number | null) => void;
 }
 
 const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
@@ -24,6 +27,8 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
   totalPages,
   onPageChange,
   selectedSubmissionId,
+  expandedSubmissionId,
+  onToggleExpand,
 }) => {
   const isInitialLoading = loading && submissions.length === 0;
   const hasMultiplePages = totalPages > 1;
@@ -114,6 +119,12 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
               >
                 제출 시간
               </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                코드
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -121,48 +132,150 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
               const meta = getSubmissionStatusMeta(submission.submitStatus);
               const isSelected =
                 submission.submissionId === selectedSubmissionId;
+              const isExpanded =
+                expandedSubmissionId === submission.submissionId;
 
               return (
-                <tr
-                  key={submission.submissionId}
-                  className={isSelected ? 'bg-indigo-50' : undefined}
-                >
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    #{submission.submissionId}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${meta.bgColor} ${meta.textColor}`}
-                    >
-                      {meta.icon !== 'spinner' ? (
-                        <span className="mr-1 text-base leading-none">
-                          {meta.icon}
-                        </span>
-                      ) : null}
-                      {meta.text}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 uppercase">
-                    {submission.language}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {submission.runtimeMs !== undefined &&
-                    submission.runtimeMs !== null
-                      ? `${submission.runtimeMs}ms`
-                      : '-'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {submission.memoryKb !== undefined &&
-                    submission.memoryKb !== null
-                      ? `${submission.memoryKb}KB`
-                      : '-'}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {submission.submitTime
-                      ? new Date(submission.submitTime).toLocaleString('ko-KR')
-                      : '-'}
-                  </td>
-                </tr>
+                <React.Fragment key={submission.submissionId}>
+                  <tr
+                    className={`${
+                      isSelected ? 'bg-indigo-50' : 'bg-white'
+                    } ${isExpanded ? 'border-b border-gray-200' : ''}`}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      #{submission.submissionId}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${meta.bgColor} ${meta.textColor}`}
+                      >
+                        {meta.icon !== 'spinner' ? (
+                          <span className="mr-1 text-base leading-none">
+                            {meta.icon}
+                          </span>
+                        ) : null}
+                        {meta.text}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500 uppercase">
+                      {submission.language}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {submission.runtimeMs !== undefined &&
+                      submission.runtimeMs !== null
+                        ? `${submission.runtimeMs}ms`
+                        : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {submission.memoryKb !== undefined &&
+                      submission.memoryKb !== null
+                        ? `${submission.memoryKb}KB`
+                        : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {submission.submitTime
+                        ? new Date(submission.submitTime).toLocaleString(
+                            'ko-KR'
+                          )
+                        : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {onToggleExpand && (
+                        <IconButton
+                          label={isExpanded ? '코드 닫기' : '코드 보기'}
+                          onClick={() =>
+                            onToggleExpand(
+                              isExpanded ? null : submission.submissionId
+                            )
+                          }
+                          className="ml-auto"
+                        >
+                          {isExpanded ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M18 12H6"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={1.5}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 6v12m6-6H6"
+                              />
+                            </svg>
+                          )}
+                          <span className="ml-1 text-sm">
+                            {isExpanded ? '코드 닫기' : '코드 보기'}
+                          </span>
+                        </IconButton>
+                      )}
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={7} className="px-4 pb-4">
+                        <div className="mt-2 border border-gray-200 rounded-lg bg-white shadow-sm">
+                          <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                            <h4 className="text-sm font-semibold text-gray-700">
+                              제출 코드
+                            </h4>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-gray-400">
+                                {submission.language}
+                              </span>
+                              <IconButton
+                                label="코드 복사"
+                                onClick={() =>
+                                  navigator.clipboard.writeText(
+                                    submission.sourceCode
+                                  )
+                                }
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={1.5}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 13h6m-6 4h6M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2h-3.586a1 1 0 01-.707-.293l-1.414-1.414A1 1 0 0010.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                  />
+                                </svg>
+                                <span className="ml-1 text-sm">복사</span>
+                              </IconButton>
+                            </div>
+                          </div>
+                          <div className="max-h-72 overflow-auto bg-gray-900 text-green-200 font-mono text-xs px-4 py-3 leading-relaxed">
+                            <pre className="whitespace-pre-wrap">
+                              {submission.sourceCode}
+                            </pre>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               );
             })}
           </tbody>
