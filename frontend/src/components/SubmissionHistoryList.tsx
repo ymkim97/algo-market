@@ -1,9 +1,11 @@
 import React from 'react';
+import Editor from '@monaco-editor/react';
 import { SubmissionHistoryForProblem } from '../types';
 import ErrorMessage from './ErrorMessage';
 import LoadingSpinner from './LoadingSpinner';
 import { getSubmissionStatusMeta } from '../utils/submissionStatus';
 import IconButton from './IconButton';
+import { useToastContext } from '../context/ToastContext';
 
 interface SubmissionHistoryListProps {
   submissions: SubmissionHistoryForProblem[];
@@ -30,6 +32,7 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
   expandedSubmissionId,
   onToggleExpand,
 }) => {
+  const toast = useToastContext();
   const isInitialLoading = loading && submissions.length === 0;
   const hasMultiplePages = totalPages > 1;
 
@@ -45,6 +48,52 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
       { length: end - adjustedStart + 1 },
       (_, index) => adjustedStart + index
     );
+  };
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success('코드를 복사했습니다!');
+    } catch (error) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        toast.success('코드를 복사했습니다!');
+      } catch (fallbackError) {
+        console.error('Clipboard copy failed', fallbackError);
+        toast.error('클립보드 복사에 실패했습니다.');
+      }
+    }
+  };
+
+  const resolveEditorLanguage = (language: string) => {
+    const upper = language?.toUpperCase() ?? '';
+    if (upper.includes('JAVA')) {
+      return 'java';
+    }
+    if (upper.includes('PYTHON')) {
+      return 'python';
+    }
+    if (upper.includes('JAVASCRIPT') || upper.includes('JS')) {
+      return 'javascript';
+    }
+    if (upper.includes('TYPESCRIPT') || upper.includes('TS')) {
+      return 'typescript';
+    }
+    if (upper.includes('C++') || upper.includes('CPP')) {
+      return 'cpp';
+    }
+    if (upper.includes('C#')) {
+      return 'csharp';
+    }
+    return 'plaintext';
   };
 
   if (isInitialLoading) {
@@ -85,43 +134,43 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
             <tr>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 제출 ID
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 결과
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 언어
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 실행 시간
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 메모리
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-4 py-3 text-left text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 제출 시간
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-12 py-3 text-right text-xs font-medium text-black-500 uppercase tracking-wider"
               >
                 코드
               </th>
@@ -142,7 +191,7 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
                       isSelected ? 'bg-indigo-50' : 'bg-white'
                     } ${isExpanded ? 'border-b border-gray-200' : ''}`}
                   >
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-black-500">
                       #{submission.submissionId}
                     </td>
                     <td className="px-4 py-3">
@@ -157,16 +206,16 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
                         {meta.text}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500 uppercase">
+                    <td className="px-4 py-3 text-sm text-black-500 uppercase">
                       {submission.language}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-black-500">
                       {submission.runtimeMs !== undefined &&
                       submission.runtimeMs !== null
                         ? `${submission.runtimeMs}ms`
                         : '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-black-500">
                       {submission.memoryKb !== undefined &&
                       submission.memoryKb !== null
                         ? `${submission.memoryKb}KB`
@@ -243,9 +292,7 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
                               <IconButton
                                 label="코드 복사"
                                 onClick={() =>
-                                  navigator.clipboard.writeText(
-                                    submission.sourceCode
-                                  )
+                                  handleCopyCode(submission.sourceCode)
                                 }
                               >
                                 <svg
@@ -266,10 +313,32 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
                               </IconButton>
                             </div>
                           </div>
-                          <div className="max-h-72 overflow-auto bg-gray-900 text-green-200 font-mono text-xs px-4 py-3 leading-relaxed">
-                            <pre className="whitespace-pre-wrap">
-                              {submission.sourceCode}
-                            </pre>
+                          <div className="max-h-80 overflow-hidden">
+                            <Editor
+                              height="320px"
+                              language={resolveEditorLanguage(
+                                submission.language
+                              )}
+                              value={submission.sourceCode}
+                              theme="vs-dark"
+                              options={{
+                                readOnly: true,
+                                fontSize: 13,
+                                lineNumbers: 'on',
+                                minimap: { enabled: false },
+                                scrollbar: {
+                                  vertical: 'visible',
+                                  horizontal: 'visible',
+                                },
+                                overviewRulerLanes: 0,
+                                wordWrap: 'off',
+                              }}
+                              loading={
+                                <div className="flex h-52 items-center justify-center bg-gray-900 text-sm text-gray-200">
+                                  코드 뷰어를 불러오는 중...
+                                </div>
+                              }
+                            />
                           </div>
                         </div>
                       </td>

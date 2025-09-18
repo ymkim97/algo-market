@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { problemService } from '../services/problemService';
 import { submissionService } from '../services/submissionService';
 import { useAsync } from '../hooks/useAsync';
@@ -17,6 +17,7 @@ import ProgressBar from '../components/ProgressBar';
 import Editor from '@monaco-editor/react';
 import SubmissionHistoryList from '../components/SubmissionHistoryList';
 import { getSubmissionStatusMeta } from '../utils/submissionStatus';
+import { authService } from '../services/authService';
 
 const HISTORY_PAGE_SIZE = 10;
 
@@ -101,10 +102,16 @@ if __name__ == "__main__":
   const [expandedSubmissionId, setExpandedSubmissionId] = useState<
     number | null
   >(null);
+  const [historyRequiresLogin, setHistoryRequiresLogin] = useState(false);
 
   const loadHistory = React.useCallback(
     async (pageToLoad: number) => {
       if (historyLoading) {
+        return;
+      }
+
+      if (!authService.isAuthenticated()) {
+        setHistoryRequiresLogin(true);
         return;
       }
 
@@ -117,6 +124,7 @@ if __name__ == "__main__":
         return;
       }
 
+      setHistoryRequiresLogin(false);
       setHistoryLoading(true);
       setHistoryError(null);
 
@@ -148,10 +156,24 @@ if __name__ == "__main__":
   const handleResultTabSelect = React.useCallback(() => {
     setActiveResultTab('result');
     setExpandedSubmissionId(null);
+    setHistoryRequiresLogin(false);
   }, []);
 
   const handleHistoryTabSelect = React.useCallback(() => {
     setActiveResultTab('history');
+    setExpandedSubmissionId(null);
+    setHistorySubmissions([]);
+    setHistoryPage(0);
+    setHistoryTotalPages(0);
+    setHistoryError(null);
+    historyRequestPageRef.current = 0;
+
+    if (!authService.isAuthenticated()) {
+      setHistoryRequiresLogin(true);
+      return;
+    }
+
+    setHistoryRequiresLogin(false);
     loadHistory(0);
   }, [loadHistory]);
 
@@ -162,6 +184,7 @@ if __name__ == "__main__":
     setHistoryError(null);
     historyRequestPageRef.current = 0;
     setExpandedSubmissionId(null);
+    setHistoryRequiresLogin(false);
   }, [actualProblemId, problemId]);
 
   // 코드 변경 핸들러
@@ -955,6 +978,18 @@ if __name__ == "__main__":
                   코드를 제출하면 여기에 결과가 표시됩니다.
                 </div>
               )
+            ) : historyRequiresLogin ? (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+                <p className="text-sm text-gray-600">
+                  제출 기록은 로그인 후에 확인할 수 있습니다.
+                </p>
+                <Link
+                  to="/login"
+                  className="mt-4 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  로그인 하러 가기
+                </Link>
+              </div>
             ) : (
               <SubmissionHistoryList
                 submissions={historySubmissions}
