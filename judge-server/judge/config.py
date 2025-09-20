@@ -18,8 +18,12 @@ class Settings:
     redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
     redis_password: str | None = os.getenv("REDIS_PASSWORD")
 
-    TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "temp_dir")
-    PROBLEM_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "problems")
+    _default_base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+    TEMP_DIR = os.path.abspath(os.getenv("TEMP_DIR", os.path.join(_default_base_dir, "temp_dir")))
+    TEMP_DIR_HOST = os.path.abspath(os.getenv("TEMP_DIR_HOST", TEMP_DIR))
+
+    PROBLEM_DIR = os.path.abspath(os.getenv("PROBLEM_DIR", os.path.join(_default_base_dir, "problems")))
+    PROBLEM_DIR_HOST = os.path.abspath(os.getenv("PROBLEM_DIR_HOST", PROBLEM_DIR))
 
 settings = Settings()

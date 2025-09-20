@@ -53,14 +53,14 @@ public class SecurityConfig {
 
 			.exceptionHandling(ex -> ex
 				.authenticationEntryPoint((request, response, authException) -> {
-					log.error("Authentication Failure", authException);
+					log.error("Authentication Fail requestURL: {}", request.getRequestURL().toString());
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 					response.setContentType("application/json;charset=UTF-8");
 					response.getWriter().write("{\"error\":\"Unauthorized\"}");
 				})
 
 			.accessDeniedHandler((request, response, accessDeniedException) -> {
-				log.error("Authentication Failure", accessDeniedException);
+				log.error("AccessDenied requestURL: {}", request.getRequestURL().toString());
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 				response.setContentType("application/json;charset=UTF-8");
 				response.getWriter().write("{\"error\":\"Not Found\"}");

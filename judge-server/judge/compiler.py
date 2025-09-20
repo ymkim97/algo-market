@@ -2,6 +2,8 @@ import subprocess
 import logging
 import os
 
+from judge.path_utils import resolve_host_volume_path
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ DOCKER_BASE_CMD = [
 
 def compile_java(source_code_path) -> int:
     work_dir = os.path.dirname(source_code_path)
+    logger.info(work_dir)
 
     docker_cmd = _build_docker_command(work_dir, DOCKER_IMAGES["JAVA"])
     docker_cmd.extend(["javac", "-encoding", "UTF-8", "-cp", ".", "Main.java"])
@@ -40,16 +43,23 @@ def compile_python(source_code_path) -> int:
 
 def _build_docker_command(work_dir: str, image: str) -> list[str]:
     docker_cmd = DOCKER_BASE_CMD.copy()
+
+    # 컨테이너 환경인지 확인 (/.dockerenv 파일 존재 여부)
+    is_in_container = os.path.exists("/.dockerenv")
+
+    if is_in_container:
+        host_work_dir = resolve_host_volume_path(work_dir)
+    else:
+        host_work_dir = work_dir
+
     docker_cmd.extend([
-        "-v", f"{work_dir}:/app:rw",
+        "-v", f"{host_work_dir}:/app:rw",
         "-w", "/app",
         image
     ])
     return docker_cmd
 
 def _run_compilation(docker_cmd: list[str], language: str) -> int:
-    logger.info(f"Compiling {language}")
-    
     try:
         result = subprocess.run(
             docker_cmd,

@@ -1,6 +1,7 @@
 from judge.compiler import compile_java, compile_python
 from judge.problem_data_manager import fetch_test_data
 from judge.progress_publisher import progress_publisher
+from judge.path_utils import resolve_host_volume_path
 
 import os
 import logging
@@ -113,11 +114,19 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
 
     work_dir = os.path.dirname(path)
 
+    # 컨테이너 환경인지 확인 (/.dockerenv 파일 존재 여부)
+    is_in_container = os.path.exists("/.dockerenv")
+
+    if is_in_container:
+        host_work_dir = resolve_host_volume_path(work_dir)
+    else:
+        host_work_dir = work_dir
+
     docker_cmd = DOCKER_BASE_CMD.copy()
 
     if language == "JAVA":
         docker_cmd.extend([
-            "-v", f"{work_dir}:/app:ro",
+            "-v", f"{host_work_dir}:/app:ro",
             "-w", "/app",
             "-i",
             DOCKER_IMAGES[language]
@@ -126,7 +135,7 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
     elif language == "PYTHON":
         docker_cmd.extend([
             "--memory", f"{memory_limit_mb + 4}m",
-            "-v", f"{work_dir}:/app:ro",
+            "-v", f"{host_work_dir}:/app:ro",
             "-w", "/app",
             "-i",
             DOCKER_IMAGES[language]

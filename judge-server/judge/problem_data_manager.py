@@ -52,7 +52,7 @@ def _sort_test_files(filenames: List[str]) -> Tuple[List[str], List[str]]:
     if not filenames:
         raise ValueError("No test files found.")
 
-    _CASE_RE = re.compile(r"^.+-(\d+)\.(in|out)$")
+    _CASE_RE = re.compile(r"^.*?(\d+)\.(in|out)$")
 
     def get_test_case_number(filename: str) -> int:
         m = _CASE_RE.match(filename)
