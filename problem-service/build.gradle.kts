@@ -23,6 +23,10 @@ repositories {
     mavenCentral()
 }
 
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    exclude("application-local.yml")
+}
+
 val mockitoAgent: Configuration = configurations.create("mockitoAgent")
 
 dependencies {
