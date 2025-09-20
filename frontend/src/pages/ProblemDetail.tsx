@@ -18,6 +18,12 @@ import Editor from '@monaco-editor/react';
 import SubmissionHistoryList from '../components/SubmissionHistoryList';
 import { getSubmissionStatusMeta } from '../utils/submissionStatus';
 import { authService } from '../services/authService';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const HISTORY_PAGE_SIZE = 10;
 
@@ -577,10 +583,103 @@ if __name__ == "__main__":
               <h2 className="text-lg font-semibold text-gray-900 mb-2">
                 문제 설명
               </h2>
-              <div
-                className="text-gray-700 prose prose-sm max-w-full break-words"
-                dangerouslySetInnerHTML={{ __html: problem.description }}
-              />
+              <div className="text-gray-700 prose prose-sm max-w-full break-words prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    ul: ({ children }) => (
+                      <ul className="list-disc pl-6 mb-4 space-y-1">
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal pl-6 mb-4 space-y-1">
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => <li className="ml-0">{children}</li>,
+                    table: ({ children }) => (
+                      <table className="min-w-full divide-y divide-gray-300 mb-4">
+                        {children}
+                      </table>
+                    ),
+                    thead: ({ children }) => (
+                      <thead className="bg-gray-50">{children}</thead>
+                    ),
+                    th: ({ children }) => (
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {children}
+                      </th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {children}
+                      </td>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-indigo-500 pl-4 italic bg-gray-50 py-2 mb-4">
+                        {children}
+                      </blockquote>
+                    ),
+                    h1: ({ children }) => (
+                      <h1 className="text-2xl font-bold mt-8 mb-6 text-gray-900">
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-xl font-semibold mt-6 mb-4 text-gray-900">
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-lg font-semibold mt-4 mb-3 text-gray-900">
+                        {children}
+                      </h3>
+                    ),
+                    h4: ({ children }) => (
+                      <h4 className="text-base font-semibold mt-4 mb-2 text-gray-900">
+                        {children}
+                      </h4>
+                    ),
+                    h5: ({ children }) => (
+                      <h5 className="text-sm font-semibold mt-3 mb-2 text-gray-900">
+                        {children}
+                      </h5>
+                    ),
+                    h6: ({ children }) => (
+                      <h6 className="text-xs font-semibold mt-3 mb-2 text-gray-700">
+                        {children}
+                      </h6>
+                    ),
+                    code: ({ children, className }) => {
+                      const match = /language-(\w+)/.exec(className || '');
+                      const language = match ? match[1] : '';
+
+                      if (language) {
+                        return (
+                          <SyntaxHighlighter
+                            style={vscDarkPlus as any}
+                            language={language}
+                            PreTag="div"
+                            className="mb-4 rounded-lg text-sm"
+                          >
+                            {String(children).replace(/\n$/, '')}
+                          </SyntaxHighlighter>
+                        );
+                      }
+
+                      return (
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {problem.description}
+                </ReactMarkdown>
+              </div>
             </div>
           )}
 

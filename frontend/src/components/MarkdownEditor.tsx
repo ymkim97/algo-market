@@ -1,4 +1,10 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface MarkdownEditorProps {
   value: string;
@@ -46,75 +52,6 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     }
     // input 값 초기화
     event.target.value = '';
-  };
-
-  // 간단한 마크다운 렌더링 함수 (실제 프로젝트에서는 marked나 remark를 사용하는 것을 권장)
-  const renderMarkdown = (markdown: string): string => {
-    let html = markdown
-      // 헤더
-      .replace(
-        /^### (.*$)/gim,
-        '<h3 class="text-lg font-semibold mt-6 mb-4">$1</h3>'
-      )
-      .replace(
-        /^## (.*$)/gim,
-        '<h2 class="text-xl font-semibold mt-8 mb-4">$1</h2>'
-      )
-      .replace(
-        /^# (.*$)/gim,
-        '<h1 class="text-2xl font-bold mt-8 mb-6">$1</h1>'
-      )
-
-      // 코드 블록
-      .replace(
-        /```([\s\S]*?)```/g,
-        '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code class="text-sm">$1</code></pre>'
-      )
-
-      // 인라인 코드
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">$1</code>'
-      )
-
-      // 볼드
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-
-      // 이탤릭
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-
-      // 순서 없는 리스트
-      .replace(/^- (.*$)/gim, '<li class="ml-4 list-disc">$1</li>')
-
-      // 순서 있는 리스트
-      .replace(/^\d+\. (.*$)/gim, '<li class="ml-4 list-decimal">$1</li>')
-
-      // 이미지 (링크보다 먼저 처리)
-      .replace(
-        /!\[([^\]]*)\]\(([^)]+)\)/g,
-        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4 mx-auto block" style="max-height: 400px;" />'
-      )
-
-      // 링크
-      .replace(
-        /\[([^\]]+)\]\(([^)]+)\)/g,
-        '<a href="$2" class="text-indigo-600 hover:text-indigo-800 underline">$1</a>'
-      )
-
-      // 줄바꿈
-      .replace(/\n/g, '<br>');
-
-    // 리스트 항목들을 ul/ol 태그로 감싸기
-    html = html.replace(
-      /((<li class="ml-4 list-disc">.*?<\/li>\s*)+)/g,
-      '<ul class="space-y-1 mb-4">$1</ul>'
-    );
-    html = html.replace(
-      /((<li class="ml-4 list-decimal">.*?<\/li>\s*)+)/g,
-      '<ol class="space-y-1 mb-4">$1</ol>'
-    );
-
-    return html;
   };
 
   return (
@@ -255,13 +192,105 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           />
         ) : (
           <div
-            className="px-4 py-3 prose prose-sm max-w-none"
+            className="px-4 py-3 prose prose-sm max-w-none prose-ul:list-disc prose-ol:list-decimal prose-li:ml-4"
             style={{ minHeight: `${rows * 1.5}rem` }}
           >
             {value.trim() ? (
-              <div
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
-              />
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                  ul: ({ children }) => (
+                    <ul className="list-disc pl-6 mb-4 space-y-1">
+                      {children}
+                    </ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal pl-6 mb-4 space-y-1">
+                      {children}
+                    </ol>
+                  ),
+                  li: ({ children }) => <li className="ml-0">{children}</li>,
+                  table: ({ children }) => (
+                    <table className="min-w-full divide-y divide-gray-300 mb-4">
+                      {children}
+                    </table>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-gray-50">{children}</thead>
+                  ),
+                  th: ({ children }) => (
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {children}
+                    </th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {children}
+                    </td>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-indigo-500 pl-4 italic bg-gray-50 py-2 mb-4">
+                      {children}
+                    </blockquote>
+                  ),
+                  h1: ({ children }) => (
+                    <h1 className="text-2xl font-bold mt-8 mb-6 text-gray-900">
+                      {children}
+                    </h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="text-xl font-semibold mt-6 mb-4 text-gray-900">
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-lg font-semibold mt-4 mb-3 text-gray-900">
+                      {children}
+                    </h3>
+                  ),
+                  h4: ({ children }) => (
+                    <h4 className="text-base font-semibold mt-4 mb-2 text-gray-900">
+                      {children}
+                    </h4>
+                  ),
+                  h5: ({ children }) => (
+                    <h5 className="text-sm font-semibold mt-3 mb-2 text-gray-900">
+                      {children}
+                    </h5>
+                  ),
+                  h6: ({ children }) => (
+                    <h6 className="text-xs font-semibold mt-3 mb-2 text-gray-700">
+                      {children}
+                    </h6>
+                  ),
+                  code: ({ children, className }) => {
+                    const match = /language-(\w+)/.exec(className || '');
+                    const language = match ? match[1] : '';
+
+                    if (language) {
+                      return (
+                        <SyntaxHighlighter
+                          style={vscDarkPlus as any}
+                          language={language}
+                          PreTag="div"
+                          className="mb-4 rounded-lg text-sm"
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      );
+                    }
+
+                    return (
+                      <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {value}
+              </ReactMarkdown>
             ) : (
               <p className="text-gray-500 italic">
                 미리보기할 내용이 없습니다.
