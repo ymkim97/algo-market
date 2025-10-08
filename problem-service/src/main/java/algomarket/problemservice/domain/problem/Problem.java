@@ -144,7 +144,7 @@ public class Problem {
 
 	private void validateTestCaseCount() {
 		if (testCaseUrls.size() < 10) {
-			throw new InsufficientTestCases("문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.");
+			throw new InsufficientTestCasesException("문제는 최소 10개 이상의 각각 입력, 출력 채점용 데이터가 필요합니다.");
 		}
 	}
 }
