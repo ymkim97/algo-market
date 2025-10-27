@@ -1,4 +1,4 @@
-from judge.compiler import compile_java, compile_python
+from judge.compiler import compile_java, compile_python, compile_kotlin
 from judge.problem_data_manager import fetch_test_data
 from judge.progress_publisher import progress_publisher
 from judge.path_utils import resolve_host_volume_path
@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 
 DOCKER_IMAGES = {
     "JAVA": "amazoncorretto:21",
-    "PYTHON": "python:3.13-slim"
+    "PYTHON": "python:3.13-slim",
+    "KOTLIN": "public.ecr.aws/o2m2c0d2/algomarket/kotlinc:latest"
 }
 
 DOCKER_BASE_CMD = [
@@ -42,6 +43,15 @@ def run(source_code_path: str, language: str, time_limit_sec: int, memory_limit_
     elif language == "PYTHON":
         compile_result_code = compile_python(source_code_path)
         time_limit_sec = time_limit_sec * 3 + 2
+        memory_limit_mb = memory_limit_mb * 2 + 16
+
+        if compile_result_code != 0:
+            progress_publisher.publish_judging_completed(submission_id, username, "COMPILE_ERROR")
+            return "COMPILE_ERROR", None, None
+
+    elif language == "KOTLIN":
+        compile_result_code = compile_kotlin(source_code_path)
+        time_limit_sec = time_limit_sec * 2 + 1
         memory_limit_mb = memory_limit_mb * 2 + 16
 
         if compile_result_code != 0:
@@ -132,6 +142,7 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
             DOCKER_IMAGES[language]
         ])
         docker_cmd.extend(["bash", "-c", f"time java -Xmx{memory_limit_mb}m -Dfile.encoding=UTF-8 -cp . Main; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2; exit $exit_code"])
+
     elif language == "PYTHON":
         docker_cmd.extend([
             "--memory", f"{memory_limit_mb + 4}m",
@@ -141,6 +152,22 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
             DOCKER_IMAGES[language]
         ])
         docker_cmd.extend(["bash", "-c", f"time python -I -S -W ignore Main.py; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2 ; exit $exit_code"])
+
+    elif language == "KOTLIN":
+        docker_cmd.extend([
+            "-v", f"{host_work_dir}:/app:ro",
+            "-w", "/app",
+            "-i",
+            DOCKER_IMAGES[language]
+        ])
+        docker_cmd.extend([
+            "bash", "-c",
+            f'time java -Xmx{memory_limit_mb}m -Dfile.encoding=UTF-8 '
+            f'-cp "out:/opt/kotlinc/lib/*" MainKt; '
+            'exit_code=$?; '
+            'echo "MEMORY_KB:$(( ($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0)) / 1024 ))" >&2; '
+            'exit $exit_code'
+        ])
 
     return docker_cmd
 

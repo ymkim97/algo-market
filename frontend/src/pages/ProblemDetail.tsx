@@ -53,6 +53,9 @@ public class Main {
 
 if __name__ == "__main__":
     main()`,
+    kotlin: `fun main() {
+    println("Hello, World!")
+}`,
   };
 
   // 저장된 상태 불러오기
@@ -65,9 +68,11 @@ if __name__ == "__main__":
     () => {
       const savedJava = localStorage.getItem(getStorageKey('code-java'));
       const savedPython = localStorage.getItem(getStorageKey('code-python'));
+      const savedKotlin = localStorage.getItem(getStorageKey('code-kotlin'));
       return {
         java: savedJava || defaultCode.java,
         python: savedPython || defaultCode.python,
+        kotlin: savedKotlin || defaultCode.kotlin,
       };
     }
   );
@@ -797,6 +802,7 @@ if __name__ == "__main__":
                 >
                   <option value="java">Java 21</option>
                   <option value="python">Python 3</option>
+                  <option value="kotlin">Kotlin</option>
                 </select>
                 <button
                   onClick={handleResetCode}
@@ -810,7 +816,12 @@ if __name__ == "__main__":
             <div className="flex-1 border border-gray-300 rounded-lg overflow-hidden shadow-sm">
               <Editor
                 height="100%"
-                language={language === 'java' ? 'java' : 'python'}
+                language={
+                  (language === 'java' && 'java') ||
+                  (language === 'python' && 'python') ||
+                  (language === 'kotlin' && 'kotlin') ||
+                  'plaintext'
+                }
                 value={code}
                 onChange={(value) => handleCodeChange(value || '')}
                 theme="vs-dark"

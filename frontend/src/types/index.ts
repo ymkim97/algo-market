@@ -105,7 +105,7 @@ export interface SubmitResponse {
   submitTime: string;
 }
 
-export type Language = 'JAVA' | 'PYTHON' | string;
+export type Language = 'JAVA' | 'PYTHON' | 'KOTLIN' | string;
 
 export interface Submission {
   id: number;

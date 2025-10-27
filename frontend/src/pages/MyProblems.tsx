@@ -12,6 +12,7 @@ type FilterValue = 'ALL' | ProblemStatus;
 const LANGUAGE_LABELS: Record<string, string> = {
   JAVA: 'Java',
   PYTHON: 'Python',
+  KOTLIN: 'Kotlin',
   JAVASCRIPT: 'JavaScript',
   CPP: 'C++',
   C: 'C',
