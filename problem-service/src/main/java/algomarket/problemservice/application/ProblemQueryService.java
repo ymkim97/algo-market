@@ -60,7 +60,7 @@ public class ProblemQueryService implements ProblemFinder {
 	@Override
 	public MyProblemInfoResponse findMyProblem(Long problemId, String username) {
 		Problem problem = problemRepository.findByIdAndAuthorUsername(problemId, username)
-			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제 임시 저장입니다 - ID:" + problemId));
+			.orElseThrow(() -> new NotFoundException("존재하지 않는 문제입니다 - ID:" + problemId));
 
 		return MyProblemInfoResponse.from(problem);
 	}

@@ -17,7 +17,7 @@ import algomarket.problemservice.domain.member.DuplicateEmailException;
 import algomarket.problemservice.domain.member.DuplicateUsernameException;
 import algomarket.problemservice.domain.member.PasswordOrUsernameMismatchException;
 import algomarket.problemservice.domain.problem.DuplicateTitleException;
-import algomarket.problemservice.domain.problem.InsufficientTestCases;
+import algomarket.problemservice.domain.problem.InsufficientTestCasesException;
 import algomarket.problemservice.domain.service.InsufficientSolvedLanguagesException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -97,8 +97,8 @@ public class ApiControllerAdvice {
 		return getProblemDetail(ex, HttpStatus.CONFLICT, "서버 내에서 동시 처리가 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
 	}
 
-	@ExceptionHandler(InsufficientTestCases.class)
-	public ProblemDetail handleInsufficientTestCases(InsufficientTestCases ex) {
+	@ExceptionHandler(InsufficientTestCasesException.class)
+	public ProblemDetail handleInsufficientTestCases(InsufficientTestCasesException ex) {
 		log.error(ex.getMessage(), ex);
 
 		return getProblemDetail(ex, HttpStatus.BAD_REQUEST, ex.getMessage());

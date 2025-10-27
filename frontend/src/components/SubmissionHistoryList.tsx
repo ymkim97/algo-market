@@ -81,6 +81,9 @@ const SubmissionHistoryList: React.FC<SubmissionHistoryListProps> = ({
     if (upper.includes('PYTHON')) {
       return 'python';
     }
+    if (upper.includes('KOTLIN')) {
+      return 'kotlin';
+    }
     if (upper.includes('JAVASCRIPT') || upper.includes('JS')) {
       return 'javascript';
     }

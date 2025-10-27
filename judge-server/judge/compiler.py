@@ -9,24 +9,24 @@ logger = logging.getLogger(__name__)
 
 DOCKER_IMAGES = {
     "JAVA": "amazoncorretto:21",
-    "PYTHON": "python:3.13-slim"
+    "PYTHON": "python:3.13-slim",
+    "KOTLIN": "public.ecr.aws/o2m2c0d2/algomarket/kotlinc:latest"
 }
 
 DOCKER_BASE_CMD = [
     "docker", "run", "--rm",
-    "--memory", "256m",
-    "--cpus", "0.5",
+    "--memory", "512m",
+    "--cpus", "1.0",
     "--network", "none",
     "--read-only",
     "--cap-drop", "ALL",
     "--security-opt", "no-new-privileges",
     "--user", f"{os.getuid()}:{os.getgid()}",
-    "--tmpfs", "/tmp:rw,noexec,nosuid,size=32m"
+    "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m"
 ]
 
 def compile_java(source_code_path) -> int:
     work_dir = os.path.dirname(source_code_path)
-    logger.info(work_dir)
 
     docker_cmd = _build_docker_command(work_dir, DOCKER_IMAGES["JAVA"])
     docker_cmd.extend(["javac", "-encoding", "UTF-8", "-cp", ".", "Main.java"])
@@ -40,6 +40,14 @@ def compile_python(source_code_path) -> int:
     docker_cmd.extend(["python", "-W", "ignore", "-c", f"import py_compile; py_compile.compile(r'Main.py')"])
 
     return _run_compilation(docker_cmd, "PYTHON")
+
+def compile_kotlin(source_code_path) -> int:
+    work_dir = os.path.dirname(source_code_path)
+
+    docker_cmd = _build_docker_command(work_dir, DOCKER_IMAGES["KOTLIN"])
+    docker_cmd.extend(["kotlinc-jvm", "-d", "out", "Main.kt"])
+
+    return _run_compilation(docker_cmd, "KOTLIN")
 
 def _build_docker_command(work_dir: str, image: str) -> list[str]:
     docker_cmd = DOCKER_BASE_CMD.copy()
@@ -65,7 +73,7 @@ def _run_compilation(docker_cmd: list[str], language: str) -> int:
             docker_cmd,
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=90
         )
         
         if language == "PYTHON":
