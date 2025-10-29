@@ -16,6 +16,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
   JAVASCRIPT: 'JavaScript',
   CPP: 'C++',
   C: 'C',
+  SWIFT: 'Swift',
 };
 
 const MyProblems: React.FC = () => {
