@@ -3,7 +3,7 @@ from judge.config import settings
 import os
 import shutil
 
-ext_map = {"PYTHON": "py", "JAVA": "java", "KOTLIN": "kt"}
+ext_map = {"PYTHON": "py", "JAVA": "java", "KOTLIN": "kt", "SWIFT": "swift"}
 
 def save_to_temp(source_code: str, submission_id: int, username: str, language: str) -> str:
     submission_dir = os.path.join(settings.TEMP_DIR, username, str(submission_id))

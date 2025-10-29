@@ -123,6 +123,7 @@ const SubmissionsPage: React.FC = () => {
     if (upper.includes('JAVA')) return 'java';
     if (upper.includes('PYTHON')) return 'python';
     if (upper.includes('KOTLIN')) return 'kotlin';
+    if (upper.includes('SWIFT')) return 'swift';
     if (upper.includes('TYPESCRIPT') || upper.includes('TS'))
       return 'typescript';
     if (upper.includes('JAVASCRIPT') || upper.includes('JS'))

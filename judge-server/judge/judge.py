@@ -1,4 +1,4 @@
-from judge.compiler import compile_java, compile_python, compile_kotlin
+from judge.compiler import compile_java, compile_python, compile_kotlin, compile_swift
 from judge.problem_data_manager import fetch_test_data
 from judge.progress_publisher import progress_publisher
 from judge.path_utils import resolve_host_volume_path
@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 DOCKER_IMAGES = {
     "JAVA": "amazoncorretto:21",
     "PYTHON": "python:3.13-slim",
-    "KOTLIN": "public.ecr.aws/o2m2c0d2/algomarket/kotlinc:latest"
+    "KOTLIN": "public.ecr.aws/o2m2c0d2/algomarket/kotlinc:latest",
+    "SWIFT": "swift:6.2.0-jammy"
 }
 
 DOCKER_BASE_CMD = [
@@ -53,6 +54,14 @@ def run(source_code_path: str, language: str, time_limit_sec: int, memory_limit_
         compile_result_code = compile_kotlin(source_code_path)
         time_limit_sec = time_limit_sec * 2 + 1
         memory_limit_mb = memory_limit_mb * 2 + 16
+
+        if compile_result_code != 0:
+            progress_publisher.publish_judging_completed(submission_id, username, "COMPILE_ERROR")
+            return "COMPILE_ERROR", None, None
+
+    elif language == "SWIFT":
+        compile_result_code = compile_swift(source_code_path)
+        memory_limit_mb = memory_limit_mb + 512
 
         if compile_result_code != 0:
             progress_publisher.publish_judging_completed(submission_id, username, "COMPILE_ERROR")
@@ -168,6 +177,16 @@ def _build_docker_command(language, memory_limit_mb, path) -> list[str]:
             'echo "MEMORY_KB:$(( ($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0)) / 1024 ))" >&2; '
             'exit $exit_code'
         ])
+
+    elif language == "SWIFT":
+        docker_cmd.extend([
+            "--memory", f"{memory_limit_mb}m",
+            "-v", f"{host_work_dir}:/app:ro",
+            "-w", "/app",
+            "-i",
+            DOCKER_IMAGES[language]
+        ])
+        docker_cmd.extend(["bash", "-c", f"time ./Main; exit_code=$?; echo \"MEMORY_KB:$(($(cat /sys/fs/cgroup/memory.peak 2>/dev/null || echo 0) / 1024))\" >&2 ; exit $exit_code"])
 
     return docker_cmd
 

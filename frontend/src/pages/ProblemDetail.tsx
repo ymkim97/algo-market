@@ -56,6 +56,15 @@ if __name__ == "__main__":
     kotlin: `fun main() {
     println("Hello, World!")
 }`,
+    swift: `import Foundation
+
+func main() {
+    if let line = readLine() {
+        print(line)
+    }
+}
+
+main()`,
   };
 
   // 저장된 상태 불러오기
@@ -69,10 +78,12 @@ if __name__ == "__main__":
       const savedJava = localStorage.getItem(getStorageKey('code-java'));
       const savedPython = localStorage.getItem(getStorageKey('code-python'));
       const savedKotlin = localStorage.getItem(getStorageKey('code-kotlin'));
+      const savedSwift = localStorage.getItem(getStorageKey('code-swift'));
       return {
         java: savedJava || defaultCode.java,
         python: savedPython || defaultCode.python,
         kotlin: savedKotlin || defaultCode.kotlin,
+        swift: savedSwift || defaultCode.swift,
       };
     }
   );
@@ -803,6 +814,7 @@ if __name__ == "__main__":
                   <option value="java">Java 21</option>
                   <option value="python">Python 3</option>
                   <option value="kotlin">Kotlin</option>
+                  <option value="swift">Swift</option>
                 </select>
                 <button
                   onClick={handleResetCode}
@@ -820,6 +832,7 @@ if __name__ == "__main__":
                   (language === 'java' && 'java') ||
                   (language === 'python' && 'python') ||
                   (language === 'kotlin' && 'kotlin') ||
+                  (language === 'swift' && 'swift') ||
                   'plaintext'
                 }
                 value={code}

@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 DOCKER_IMAGES = {
     "JAVA": "amazoncorretto:21",
     "PYTHON": "python:3.13-slim",
-    "KOTLIN": "public.ecr.aws/o2m2c0d2/algomarket/kotlinc:latest"
+    "KOTLIN": "public.ecr.aws/o2m2c0d2/algomarket/kotlinc:latest",
+    "SWIFT": "swift:6.2.0-jammy"
 }
 
 DOCKER_BASE_CMD = [
@@ -48,6 +49,14 @@ def compile_kotlin(source_code_path) -> int:
     docker_cmd.extend(["kotlinc-jvm", "-d", "out", "Main.kt"])
 
     return _run_compilation(docker_cmd, "KOTLIN")
+
+def compile_swift(source_code_path) -> int:
+    work_dir = os.path.dirname(source_code_path)
+
+    docker_cmd = _build_docker_command(work_dir, DOCKER_IMAGES["SWIFT"])
+    docker_cmd.extend(["swiftc", "-O", "-module-cache-path", "/tmp/ModuleCache", "-o", "Main", "Main.swift"])
+
+    return _run_compilation(docker_cmd, "SWIFT")
 
 def _build_docker_command(work_dir: str, image: str) -> list[str]:
     docker_cmd = DOCKER_BASE_CMD.copy()
